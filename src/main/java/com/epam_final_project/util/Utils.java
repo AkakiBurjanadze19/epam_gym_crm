@@ -48,7 +48,6 @@ public class Utils {
         }
 
         String generatedPassword = password.toString();
-        log.debug("Generated password: {}", generatedPassword);
         return generatedPassword;
     }
 }
