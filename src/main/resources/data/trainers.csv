@@ -1,0 +1,6 @@
+userId,firstName,lastName,username,password,isActive,specialization
+1,John,Smith,john.smith,abcdefghij,true,CARDIO
+2,Jane,Johnson,jane.johnson,klmnopqrst,true,YOGA
+3,Michael,Williams,michael.williams,uvwxyzabcd,true,STRENGTH
+4,Sarah,Brown,sarah.brown,efghijklmn,true,PILATES
+5,David,Davis,david.davis,opqrstuvwx,true,CROSSFIT

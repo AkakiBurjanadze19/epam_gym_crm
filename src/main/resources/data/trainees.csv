@@ -1,0 +1,6 @@
+userId,firstName,lastName,username,password,isActive,dateOfBirth,address
+101,Alex,Wilson,alex.wilson,abcdefghij,true,1990-05-15,123 Fitness Ave Gym City
+102,Taylor,Anderson,taylor.anderson,klmnopqrst,true,1985-08-22,456 Health Blvd Wellness Town
+103,Jordan,Martinez,jordan.martinez,uvwxyzabcd,true,1992-12-03,789 Training St Active Village
+104,Casey,Taylor,casey.taylor,efghijklmn,true,1988-03-17,321 Exercise Ln Fit Community
+105,Riley,Thomas,riley.thomas,opqrstuvwx,true,1995-11-30,654 Movement Rd Athletic District
