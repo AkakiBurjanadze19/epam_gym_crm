@@ -1,0 +1,66 @@
+package service;
+
+import com.epam_final_project.dao.TraineeDao;
+import com.epam_final_project.domain.Trainee;
+import com.epam_final_project.service.impl.TraineeServiceImpl;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
+public class TraineeServiceImplTest {
+    @Mock
+    private TraineeDao traineeDao;
+
+    @InjectMocks
+    private TraineeServiceImpl traineeServiceImpl;
+
+    @Test
+    public void createTrainee_shouldCallDaoCreate() {
+        Trainee trainee = new Trainee();
+
+        traineeServiceImpl.createTrainee(trainee);
+
+        verify(traineeDao).create(trainee);
+    }
+
+    @Test
+    public void updateTrainee_shouldCallDaoUpdate() {
+        Trainee updated = new Trainee();
+        Integer traineeId = 138;
+
+        traineeServiceImpl.updateTrainee(updated, traineeId);
+
+        verify(traineeDao).update(updated, traineeId);
+    }
+
+    @Test
+    public void deleteTrainee_shouldCallDaoDelete() {
+        Integer trainerId = 149;
+
+        traineeServiceImpl.deleteTrainee(trainerId);
+
+        verify(traineeDao).delete(trainerId);
+    }
+
+    @Test
+    public void selectTrainee_shouldReturnDaoResult() {
+        Trainee trainee = new Trainee();
+        Integer traineeId = 867;
+
+        when(traineeDao.select(traineeId)).thenReturn(Optional.of(trainee));
+
+        Optional<Trainee> result = traineeServiceImpl.selectTrainee(traineeId);
+
+        assertEquals(Optional.of(trainee), result);
+        verify(traineeDao).select(traineeId);
+    }
+}
