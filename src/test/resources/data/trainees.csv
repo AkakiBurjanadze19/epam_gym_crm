@@ -1,0 +1,3 @@
+userId,firstName,lastName,username,password,isActive,dateOfBirth,address
+1,Alice,Brown,Alice.Brown,password123,true,2000-05-10,Tbilisi
+2,Bob,Smith,Bob.Smith,password456,false,1999-03-20,Batumi
