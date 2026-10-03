@@ -2,19 +2,16 @@ package com.epam_final_project.dao.impl;
 
 import com.epam_final_project.dao.TraineeDao;
 import com.epam_final_project.domain.Trainee;
-import com.epam_final_project.domain.Trainer;
 import com.epam_final_project.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 
-import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-@Component
+@Repository
 public class TraineeDaoImpl implements TraineeDao {
     private static final Logger log = LoggerFactory.getLogger(TraineeDaoImpl.class);
     private Map<Integer, Trainee> trainees;
