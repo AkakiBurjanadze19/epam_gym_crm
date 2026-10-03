@@ -74,14 +74,14 @@ public class TrainerDaoImplTest {
 
         trainers.put(1, existing);
 
-        Optional<Trainer> result = trainerDao.select(1);
+        Optional<Trainer> result = trainerDao.findById(1);
 
         assertTrue(result.isPresent());
     }
 
     @Test
     public void select_shouldReturnEmptyWhenTrainerNotFound() {
-        Optional<Trainer> result = trainerDao.select(123);
+        Optional<Trainer> result = trainerDao.findById(123);
 
         assertTrue(result.isEmpty());
     }

@@ -76,14 +76,14 @@ public class TraineeDaoImplTest {
 
         trainees.put(1, existing);
 
-        Optional<Trainee> result = traineeDao.select(1);
+        Optional<Trainee> result = traineeDao.findById(1);
 
         assertTrue(result.isPresent());
     }
 
     @Test
     public void select_shouldReturnEmptyWhenTraineeNotFound() {
-        Optional<Trainee> result = traineeDao.select(999);
+        Optional<Trainee> result = traineeDao.findById(999);
 
         assertTrue(result.isEmpty());
     }

@@ -55,6 +55,6 @@ public class TrainingDaoImplTest {
 
         trainingDao.create(training);
 
-        assertEquals(training, trainingDao.select(1).get());
+        assertEquals(training, trainingDao.findById(1).get());
     }
 }
