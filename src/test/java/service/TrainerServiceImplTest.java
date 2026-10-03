@@ -47,11 +47,11 @@ public class TrainerServiceImplTest {
         Trainer trainer = new Trainer();
         Integer trainerId = 10;
 
-        when(trainerDao.select(trainerId)).thenReturn(Optional.of(trainer));
+        when(trainerDao.findById(trainerId)).thenReturn(Optional.of(trainer));
 
         Optional<Trainer> result = trainerServiceImpl.selectTrainer(trainerId);
 
         assertEquals(result, Optional.of(trainer));
-        verify(trainerDao).select(trainerId);
+        verify(trainerDao).findById(trainerId);
     }
 }

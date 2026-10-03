@@ -37,11 +37,11 @@ public class TrainingServiceImplTest {
         Training training = new Training();
         Integer trainingId = 219;
 
-        when(trainingDao.select(trainingId)).thenReturn(Optional.of(training));
+        when(trainingDao.findById(trainingId)).thenReturn(Optional.of(training));
 
         Optional<Training> result = trainingServiceImpl.selectTraining(trainingId);
 
         assertEquals(Optional.of(training), result);
-        verify(trainingDao).select(trainingId);
+        verify(trainingDao).findById(trainingId);
     }
 }

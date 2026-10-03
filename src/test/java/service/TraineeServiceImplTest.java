@@ -56,11 +56,11 @@ public class TraineeServiceImplTest {
         Trainee trainee = new Trainee();
         Integer traineeId = 867;
 
-        when(traineeDao.select(traineeId)).thenReturn(Optional.of(trainee));
+        when(traineeDao.findById(traineeId)).thenReturn(Optional.of(trainee));
 
         Optional<Trainee> result = traineeServiceImpl.selectTrainee(traineeId);
 
         assertEquals(Optional.of(trainee), result);
-        verify(traineeDao).select(traineeId);
+        verify(traineeDao).findById(traineeId);
     }
 }
