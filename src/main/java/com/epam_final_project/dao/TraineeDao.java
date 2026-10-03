@@ -8,5 +8,5 @@ public interface TraineeDao {
     void create(Trainee trainee);
     void update(Trainee updatedTrainee, Integer traineeId);
     void delete(Integer traineeId);
-    Optional<Trainee> select(Integer traineeId);
+    Optional<Trainee> findById(Integer traineeId);
 }
