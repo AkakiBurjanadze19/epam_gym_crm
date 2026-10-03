@@ -33,7 +33,7 @@ public class TrainingDaoImpl implements TrainingDao {
     }
 
     @Override
-    public Optional<Training> select(Integer trainingId) {
+    public Optional<Training> findById(Integer trainingId) {
         log.info("selecting training with id {}", trainingId);
         return Optional.ofNullable(trainings.get(trainingId));
     }

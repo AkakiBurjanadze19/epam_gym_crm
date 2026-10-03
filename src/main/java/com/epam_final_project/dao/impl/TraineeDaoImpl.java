@@ -84,7 +84,7 @@ public class TraineeDaoImpl implements TraineeDao {
     }
 
     @Override
-    public Optional<Trainee> select(Integer traineeId) {
+    public Optional<Trainee> findById(Integer traineeId) {
         log.info("selecting trainee with id {}", traineeId);
         return Optional.ofNullable(trainees.get(traineeId));
     }

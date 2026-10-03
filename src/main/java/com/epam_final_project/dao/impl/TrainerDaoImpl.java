@@ -77,7 +77,7 @@ public class TrainerDaoImpl implements TrainerDao {
     }
 
     @Override
-    public Optional<Trainer> select(Integer trainerId) {
+    public Optional<Trainer> findById(Integer trainerId) {
         log.info("select trainer with id {}", trainerId);
         return Optional.ofNullable(trainers.get(trainerId));
     }
