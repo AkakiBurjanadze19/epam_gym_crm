@@ -2,7 +2,7 @@ package com.epam_final_project.dao.impl;
 
 import com.epam_final_project.dao.TraineeDao;
 import com.epam_final_project.domain.Trainee;
-import com.epam_final_project.util.Utils;
+import com.epam_final_project.util.UsernameAndPasswordGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,11 +23,11 @@ public class TraineeDaoImpl implements TraineeDao {
 
     @Override
     public void create(Trainee trainee) {
-        int nextId = Utils.computeNextId(trainees);
+        int nextId = UsernameAndPasswordGenerator.computeNextId(trainees);
         trainee.setUserId(nextId);
 
         if (trainee.getUsername() == null || trainee.getUsername().isEmpty()) {
-            trainee.setUsername(Utils.generateUsername(
+            trainee.setUsername(UsernameAndPasswordGenerator.generateUsername(
                     trainee.getFirstName(),
                     trainee.getLastName(),
                     trainees
@@ -39,7 +39,7 @@ public class TraineeDaoImpl implements TraineeDao {
         }
 
         if (trainee.getPassword() == null || trainee.getPassword().isEmpty()) {
-            trainee.setPassword(Utils.generatePassword());
+            trainee.setPassword(UsernameAndPasswordGenerator.generatePassword());
         }
 
         trainees.put(trainee.getUserId(), trainee);

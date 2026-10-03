@@ -2,7 +2,7 @@ package com.epam_final_project.dao.impl;
 
 import com.epam_final_project.dao.TrainingDao;
 import com.epam_final_project.domain.Training;
-import com.epam_final_project.util.Utils;
+import com.epam_final_project.util.UsernameAndPasswordGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +23,7 @@ public class TrainingDaoImpl implements TrainingDao {
 
     @Override
     public void create(Training training) {
-        int nextId = Utils.computeNextId(trainings);
+        int nextId = UsernameAndPasswordGenerator.computeNextId(trainings);
         training.setId(nextId);
 
         trainings.put(training.getId(), training);

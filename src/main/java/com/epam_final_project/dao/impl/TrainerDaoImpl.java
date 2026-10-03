@@ -2,7 +2,7 @@ package com.epam_final_project.dao.impl;
 
 import com.epam_final_project.dao.TrainerDao;
 import com.epam_final_project.domain.Trainer;
-import com.epam_final_project.util.Utils;
+import com.epam_final_project.util.UsernameAndPasswordGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,11 +23,11 @@ public class TrainerDaoImpl implements TrainerDao {
 
     @Override
     public void create(Trainer trainer) {
-        int nextId = Utils.computeNextId(trainers);
+        int nextId = UsernameAndPasswordGenerator.computeNextId(trainers);
         trainer.setUserId(nextId);
 
         if (trainer.getUsername() == null || trainer.getUsername().isEmpty()) {
-            trainer.setUsername(Utils.generateUsername(
+            trainer.setUsername(UsernameAndPasswordGenerator.generateUsername(
                     trainer.getFirstName(),
                     trainer.getLastName(),
                     trainers
@@ -39,7 +39,7 @@ public class TrainerDaoImpl implements TrainerDao {
         }
 
         if (trainer.getPassword() == null || trainer.getPassword().isEmpty()) {
-            trainer.setPassword(Utils.generatePassword());
+            trainer.setPassword(UsernameAndPasswordGenerator.generatePassword());
         }
 
         trainers.put(trainer.getUserId(), trainer);
