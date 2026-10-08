@@ -1,5 +1,6 @@
 package service;
 
+import com.epam_final_project.dao.TraineeDao;
 import com.epam_final_project.dao.TrainerDao;
 import com.epam_final_project.domain.Trainer;
 import com.epam_final_project.service.impl.TrainerServiceImpl;
@@ -19,6 +20,8 @@ import static org.mockito.Mockito.when;
 public class TrainerServiceImplTest {
     @Mock
     private TrainerDao trainerDao;
+    @Mock
+    private TraineeDao traineeDao;
 
     @InjectMocks
     private TrainerServiceImpl trainerServiceImpl;

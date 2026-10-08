@@ -1,6 +1,7 @@
 package service;
 
 import com.epam_final_project.dao.TraineeDao;
+import com.epam_final_project.dao.TrainerDao;
 import com.epam_final_project.domain.Trainee;
 import com.epam_final_project.service.impl.TraineeServiceImpl;
 import org.junit.jupiter.api.Test;
@@ -19,6 +20,8 @@ import static org.mockito.Mockito.when;
 public class TraineeServiceImplTest {
     @Mock
     private TraineeDao traineeDao;
+    @Mock
+    private TrainerDao trainerDao;
 
     @InjectMocks
     private TraineeServiceImpl traineeServiceImpl;
