@@ -42,6 +42,29 @@ public class TrainerDaoImplTest {
     }
 
     @Test
+    public void create_shouldCreateTrainerWithManuallySetUsernameAndPassword() {
+        Trainer trainer = new Trainer();
+        trainer.setFirstName("Maxime");
+        trainer.setLastName("Dvali");
+        trainer.setUsername("Maxime.Dvali");
+        trainer.setPassword("bfedfgh");
+        trainer.setActive(true);
+        trainer.setSpecialization(TrainingType.STRENGTH);
+
+        trainerDao.create(trainer);
+
+        assertEquals(1, trainer.getUserId());
+        assertEquals("Maxime", trainer.getFirstName());
+        assertEquals("Dvali", trainer.getLastName());
+        assertEquals("Maxime.Dvali", trainer.getUsername());
+        assertTrue(trainer.isActive());
+        assertEquals(TrainingType.STRENGTH, trainer.getSpecialization());
+        assertNotNull(trainer.getPassword());
+
+        assertEquals(trainer, trainers.get(1));
+    }
+
+    @Test
     public void select_shouldReturnExistingTrainer() {
         Trainer existing = new Trainer();
         existing.setUserId(1);

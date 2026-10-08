@@ -44,6 +44,31 @@ public class TraineeDaoImplTest {
     }
 
     @Test
+    public void create_shouldCreateTraineeWithManuallySetUsernameAndPassword() {
+        Trainee trainee = new Trainee();
+        trainee.setFirstName("John");
+        trainee.setLastName("Smith");
+        trainee.setUsername("John.Smith");
+        trainee.setPassword("abcdef");
+        trainee.setActive(true);
+        trainee.setDateOfBirth(LocalDate.of(2005, 12, 3));
+        trainee.setAddress("Rustaveli N12");
+
+        traineeDao.create(trainee);
+
+        assertEquals(1, trainee.getUserId());
+        assertEquals("John", trainee.getFirstName());
+        assertEquals("Smith", trainee.getLastName());
+        assertEquals("John.Smith", trainee.getUsername());
+        assertTrue(trainee.isActive());
+        assertEquals(LocalDate.of(2005, 12, 3), trainee.getDateOfBirth());
+        assertEquals("Rustaveli N12", trainee.getAddress());
+        assertNotNull(trainee.getPassword());
+
+        assertEquals(trainee, trainees.get(1));
+    }
+
+    @Test
     public void select_shouldReturnExistingTrainee() {
         Trainee existing = new Trainee();
         existing.setUserId(1);
