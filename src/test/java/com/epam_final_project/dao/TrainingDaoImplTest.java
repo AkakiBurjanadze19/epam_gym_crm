@@ -1,4 +1,4 @@
-package dao;
+package com.epam_final_project.dao;
 
 import com.epam_final_project.dao.impl.TrainingDaoImpl;
 import com.epam_final_project.domain.Training;

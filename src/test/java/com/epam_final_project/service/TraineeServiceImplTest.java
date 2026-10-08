@@ -1,4 +1,4 @@
-package service;
+package com.epam_final_project.service;
 
 import com.epam_final_project.dao.TraineeDao;
 import com.epam_final_project.dao.TrainerDao;
