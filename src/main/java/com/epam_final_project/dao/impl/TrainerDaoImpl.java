@@ -26,22 +26,6 @@ public class TrainerDaoImpl implements TrainerDao {
         int nextId = UsernameAndPasswordGenerator.computeNextId(trainers);
         trainer.setUserId(nextId);
 
-        if (trainer.getUsername() == null || trainer.getUsername().isEmpty()) {
-            trainer.setUsername(UsernameAndPasswordGenerator.generateUsername(
-                    trainer.getFirstName(),
-                    trainer.getLastName(),
-                    trainers
-                            .values()
-                            .stream()
-                            .map(Trainer::getUsername)
-                            .toList()
-            ));
-        }
-
-        if (trainer.getPassword() == null || trainer.getPassword().isEmpty()) {
-            trainer.setPassword(UsernameAndPasswordGenerator.generatePassword());
-        }
-
         trainers.put(trainer.getUserId(), trainer);
 
         log.info("creating trainer: {}", trainer);
@@ -80,5 +64,10 @@ public class TrainerDaoImpl implements TrainerDao {
     public Optional<Trainer> findById(Integer trainerId) {
         log.info("select trainer with id {}", trainerId);
         return Optional.ofNullable(trainers.get(trainerId));
+    }
+
+    @Override
+    public List<Trainer> findAll() {
+        return (List<Trainer>) trainers.values();
     }
 }

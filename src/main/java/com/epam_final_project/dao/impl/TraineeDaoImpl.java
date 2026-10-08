@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -25,22 +26,6 @@ public class TraineeDaoImpl implements TraineeDao {
     public void create(Trainee trainee) {
         int nextId = UsernameAndPasswordGenerator.computeNextId(trainees);
         trainee.setUserId(nextId);
-
-        if (trainee.getUsername() == null || trainee.getUsername().isEmpty()) {
-            trainee.setUsername(UsernameAndPasswordGenerator.generateUsername(
-                    trainee.getFirstName(),
-                    trainee.getLastName(),
-                    trainees
-                            .values()
-                            .stream()
-                            .map(Trainee::getUsername)
-                            .toList()
-            ));
-        }
-
-        if (trainee.getPassword() == null || trainee.getPassword().isEmpty()) {
-            trainee.setPassword(UsernameAndPasswordGenerator.generatePassword());
-        }
 
         trainees.put(trainee.getUserId(), trainee);
 
@@ -87,5 +72,10 @@ public class TraineeDaoImpl implements TraineeDao {
     public Optional<Trainee> findById(Integer traineeId) {
         log.info("selecting trainee with id {}", traineeId);
         return Optional.ofNullable(trainees.get(traineeId));
+    }
+
+    @Override
+    public List<Trainee> findAll() {
+        return (List<Trainee>) trainees.values();
     }
 }
