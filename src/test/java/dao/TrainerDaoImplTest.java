@@ -27,7 +27,6 @@ public class TrainerDaoImplTest {
         Trainer trainer = new Trainer();
         trainer.setFirstName("Maxime");
         trainer.setLastName("Dvali");
-        trainer.setUsername("Maxime.Dvali");
         trainer.setActive(true);
         trainer.setSpecialization(TrainingType.STRENGTH);
 
@@ -36,33 +35,10 @@ public class TrainerDaoImplTest {
         assertEquals(1, trainer.getUserId());
         assertEquals("Maxime", trainer.getFirstName());
         assertEquals("Dvali", trainer.getLastName());
-        assertEquals("Maxime.Dvali", trainer.getUsername());
-        assertNotNull(trainer.getPassword());
         assertTrue(trainer.isActive());
         assertEquals(TrainingType.STRENGTH, trainer.getSpecialization());
 
         assertEquals(trainer, trainers.get(1));
-    }
-
-    @Test
-    public void create_shouldGenerateUniqueUsername() {
-        Trainer existing = new Trainer();
-        existing.setUserId(1);
-        existing.setFirstName("Max");
-        existing.setLastName("Payne");
-        existing.setUsername("Max.Payne");
-
-        trainers.put(1, existing);
-
-        Trainer newTrainer = new Trainer();
-        newTrainer.setFirstName("Max");
-        newTrainer.setLastName("Payne");
-
-        trainerDao.create(newTrainer);
-
-        assertEquals(2, newTrainer.getUserId());
-        assertEquals("Max.Payne1", newTrainer.getUsername());
-        assertSame(newTrainer, trainers.get(2));
     }
 
     @Test

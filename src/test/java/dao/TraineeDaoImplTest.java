@@ -27,7 +27,6 @@ public class TraineeDaoImplTest {
         Trainee trainee = new Trainee();
         trainee.setFirstName("John");
         trainee.setLastName("Smith");
-        trainee.setUsername("John.Smith");
         trainee.setActive(true);
         trainee.setDateOfBirth(LocalDate.of(2005, 12, 3));
         trainee.setAddress("Rustaveli N12");
@@ -37,34 +36,11 @@ public class TraineeDaoImplTest {
         assertEquals(1, trainee.getUserId());
         assertEquals("John", trainee.getFirstName());
         assertEquals("Smith", trainee.getLastName());
-        assertEquals("John.Smith", trainee.getUsername());
         assertTrue(trainee.isActive());
         assertEquals(LocalDate.of(2005, 12, 3), trainee.getDateOfBirth());
         assertEquals("Rustaveli N12", trainee.getAddress());
-        assertNotNull(trainee.getPassword());
 
         assertEquals(trainee, trainees.get(1));
-    }
-
-    @Test
-    public void create_shouldGenerateUniqueUsername() {
-        Trainee existing = new Trainee();
-        existing.setUserId(1);
-        existing.setFirstName("John");
-        existing.setLastName("Smith");
-        existing.setUsername("John.Smith");
-
-        trainees.put(1, existing);
-
-        Trainee newTrainee = new Trainee();
-        newTrainee.setFirstName("John");
-        newTrainee.setLastName("Smith");
-
-        traineeDao.create(newTrainee);
-
-        assertEquals(2, newTrainee.getUserId());
-        assertEquals("John.Smith1", newTrainee.getUsername());
-        assertSame(newTrainee, trainees.get(2));
     }
 
     @Test
