@@ -29,6 +29,6 @@ public class TrainingServiceImpl implements TrainingService {
     @Override
     public Optional<Training> selectTraining(Integer trainingId) {
         log.info("selecting training with id {}", trainingId);
-        return trainingDao.select(trainingId);
+        return trainingDao.findById(trainingId);
     }
 }

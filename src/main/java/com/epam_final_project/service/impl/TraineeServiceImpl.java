@@ -42,6 +42,6 @@ public class TraineeServiceImpl implements TraineeService {
     @Override
     public Optional<Trainee> selectTrainee(Integer traineeId) {
         log.info("selecting trainee with id {}", traineeId);
-        return traineeDao.select(traineeId);
+        return traineeDao.findById(traineeId);
     }
 }

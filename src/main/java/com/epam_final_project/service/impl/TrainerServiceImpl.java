@@ -35,6 +35,6 @@ public class TrainerServiceImpl implements TrainerService {
     @Override
     public Optional<Trainer> selectTrainer(Integer trainerId) {
         log.info("selecting trainer with id {}", trainerId);
-        return trainerDao.select(trainerId);
+        return trainerDao.findById(trainerId);
     }
 }
