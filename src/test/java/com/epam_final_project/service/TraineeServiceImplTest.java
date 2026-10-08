@@ -13,6 +13,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -31,6 +32,20 @@ public class TraineeServiceImplTest {
         Trainee trainee = new Trainee();
 
         traineeServiceImpl.createTrainee(trainee);
+
+        verify(traineeDao).create(trainee);
+    }
+
+    @Test
+    public void createTrainee_shouldGenerateUsernameAndPasswordWhenTheyAreNotProvided() {
+        Trainee trainee = new Trainee();
+        trainee.setFirstName("John");
+        trainee.setLastName("Smith");
+
+        traineeServiceImpl.createTrainee(trainee);
+
+        assertEquals("John.Smith", trainee.getUsername());
+        assertNotNull(trainee.getPassword());
 
         verify(traineeDao).create(trainee);
     }
