@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -144,5 +145,13 @@ public class TraineeDaoImplTest {
         traineeDao.delete(1);
 
         assertNull(trainees.get(1));
+    }
+
+    @Test
+    public void findAll_shouldReturnListContainingTrainees() {
+        List<Trainee> traineesList = traineeDao.findAll();
+
+        assertNotNull(traineesList);
+        assertEquals(trainees.size(), traineesList.size());
     }
 }

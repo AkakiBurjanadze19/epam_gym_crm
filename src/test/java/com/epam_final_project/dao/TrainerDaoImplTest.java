@@ -7,6 +7,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -124,5 +125,13 @@ public class TrainerDaoImplTest {
                 NullPointerException.class,
                 () -> trainerDao.update(updated, 200)
         );
+    }
+
+    @Test
+    public void findAll_shouldReturnListContainingTrainers() {
+        List<Trainer> trainersList = trainerDao.findAll();
+
+        assertNotNull(trainersList);
+        assertEquals(trainers.size(), trainersList.size());
     }
 }
