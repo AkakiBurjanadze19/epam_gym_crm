@@ -66,7 +66,7 @@ public class TrainerDaoImplTest {
     }
 
     @Test
-    public void select_shouldReturnExistingTrainer() {
+    public void findById_shouldReturnExistingTrainer() {
         Trainer existing = new Trainer();
         existing.setUserId(1);
         existing.setFirstName("Maxime");
@@ -80,7 +80,7 @@ public class TrainerDaoImplTest {
     }
 
     @Test
-    public void select_shouldReturnEmptyWhenTrainerNotFound() {
+    public void findById_shouldReturnEmptyWhenTrainerNotFound() {
         Optional<Trainer> result = trainerDao.findById(123);
 
         assertTrue(result.isEmpty());

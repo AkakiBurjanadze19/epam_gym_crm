@@ -45,7 +45,7 @@ public class TrainingDaoImplTest {
     }
 
     @Test
-    public void select_shouldReturnExistingTraining() {
+    public void findById_shouldReturnExistingTraining() {
         Training training = new Training();
         training.setTrainerId(1);
         training.setName("Morning Cardio Blast");

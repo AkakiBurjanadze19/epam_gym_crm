@@ -70,7 +70,7 @@ public class TraineeDaoImplTest {
     }
 
     @Test
-    public void select_shouldReturnExistingTrainee() {
+    public void findById_shouldReturnExistingTrainee() {
         Trainee existing = new Trainee();
         existing.setUserId(1);
         existing.setFirstName("John");
@@ -84,7 +84,7 @@ public class TraineeDaoImplTest {
     }
 
     @Test
-    public void select_shouldReturnEmptyWhenTraineeNotFound() {
+    public void findById_shouldReturnEmptyWhenTraineeNotFound() {
         Optional<Trainee> result = traineeDao.findById(999);
 
         assertTrue(result.isEmpty());
