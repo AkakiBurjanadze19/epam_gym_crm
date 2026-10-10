@@ -28,19 +28,13 @@ public class TrainerDaoImpl implements TrainerDao {
 
         trainers.put(trainer.getUserId(), trainer);
 
-        log.info("creating trainer: {}", trainer);
-
+        log.info("created trainer: {}", trainer);
         log.info("trainers count: {}", trainers.size());
-        log.info("trainers: {}", trainers);
     }
 
     @Override
     public void update(Trainer updatedTrainer, Integer trainerId) {
-        Optional<Trainer> foundTrainer = trainers
-                .values()
-                .stream()
-                .filter(t -> t.getUserId().equals(trainerId))
-                .findFirst();
+        Optional<Trainer> foundTrainer = Optional.of(trainers.get(trainerId));
 
         log.info("updating trainer: {}", foundTrainer);
 
@@ -54,10 +48,6 @@ public class TrainerDaoImpl implements TrainerDao {
         });
 
         log.info("updated trainer: {}", foundTrainer);
-
-        if (foundTrainer.isEmpty()) {
-            throw new IllegalStateException("trainer with id " + trainerId + " not found");
-        }
     }
 
     @Override

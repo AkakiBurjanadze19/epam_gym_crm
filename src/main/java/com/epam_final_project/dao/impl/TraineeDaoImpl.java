@@ -29,18 +29,13 @@ public class TraineeDaoImpl implements TraineeDao {
 
         trainees.put(trainee.getUserId(), trainee);
 
-        log.info("creating trainee: {}", trainee);
+        log.info("created trainee: {}", trainee);
         log.info("trainees size: {}", trainees.size());
-        log.info("trainees: {}", trainees);
     }
 
     @Override
     public void update(Trainee updatedTrainee, Integer traineeId) {
-        Optional<Trainee> foundTrainee = trainees
-                .values()
-                .stream()
-                .filter(t -> t.getUserId().equals(traineeId))
-                .findFirst();
+        Optional<Trainee> foundTrainee = Optional.of(trainees.get(traineeId));
 
         log.info("updating trainee: {}", foundTrainee);
 
@@ -55,10 +50,6 @@ public class TraineeDaoImpl implements TraineeDao {
         });
 
         log.info("updated trainee: {}", foundTrainee);
-
-        if (foundTrainee.isEmpty()) {
-            throw new IllegalStateException("trainee with id " + traineeId + " not found");
-        }
     }
 
     @Override

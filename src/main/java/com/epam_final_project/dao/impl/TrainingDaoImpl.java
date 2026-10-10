@@ -28,7 +28,7 @@ public class TrainingDaoImpl implements TrainingDao {
 
         trainings.put(training.getId(), training);
 
-        log.info("creating training: {}", training);
+        log.info("created training: {}", training);
         log.info("trainings count: {}", trainings.size());
     }
 
