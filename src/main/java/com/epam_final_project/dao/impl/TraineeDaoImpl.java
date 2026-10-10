@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -67,6 +68,6 @@ public class TraineeDaoImpl implements TraineeDao {
 
     @Override
     public List<Trainee> findAll() {
-        return (List<Trainee>) trainees.values();
+        return new ArrayList<>(trainees.values());
     }
 }

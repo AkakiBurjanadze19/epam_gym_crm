@@ -58,6 +58,6 @@ public class TrainerDaoImpl implements TrainerDao {
 
     @Override
     public List<Trainer> findAll() {
-        return (List<Trainer>) trainers.values();
+        return new ArrayList<>(trainers.values());
     }
 }
