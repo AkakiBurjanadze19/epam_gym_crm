@@ -1,4 +1,4 @@
-package dao;
+package com.epam_final_project.dao;
 
 import com.epam_final_project.dao.impl.TrainingDaoImpl;
 import com.epam_final_project.domain.Training;
@@ -45,7 +45,7 @@ public class TrainingDaoImplTest {
     }
 
     @Test
-    public void select_shouldReturnExistingTraining() {
+    public void findById_shouldReturnExistingTraining() {
         Training training = new Training();
         training.setTrainerId(1);
         training.setName("Morning Cardio Blast");
@@ -55,6 +55,6 @@ public class TrainingDaoImplTest {
 
         trainingDao.create(training);
 
-        assertEquals(training, trainingDao.select(1).get());
+        assertEquals(training, trainingDao.findById(1).get());
     }
 }

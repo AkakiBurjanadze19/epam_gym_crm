@@ -1,4 +1,4 @@
-package storage;
+package com.epam_final_project.storage;
 
 import com.epam_final_project.domain.Trainee;
 import com.epam_final_project.domain.Trainer;

@@ -1,4 +1,4 @@
-package dao;
+package com.epam_final_project.dao;
 
 import com.epam_final_project.dao.impl.TraineeDaoImpl;
 import com.epam_final_project.domain.Trainee;
@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -27,7 +28,29 @@ public class TraineeDaoImplTest {
         Trainee trainee = new Trainee();
         trainee.setFirstName("John");
         trainee.setLastName("Smith");
+        trainee.setActive(true);
+        trainee.setDateOfBirth(LocalDate.of(2005, 12, 3));
+        trainee.setAddress("Rustaveli N12");
+
+        traineeDao.create(trainee);
+
+        assertEquals(1, trainee.getUserId());
+        assertEquals("John", trainee.getFirstName());
+        assertEquals("Smith", trainee.getLastName());
+        assertTrue(trainee.isActive());
+        assertEquals(LocalDate.of(2005, 12, 3), trainee.getDateOfBirth());
+        assertEquals("Rustaveli N12", trainee.getAddress());
+
+        assertEquals(trainee, trainees.get(1));
+    }
+
+    @Test
+    public void create_shouldCreateTraineeWithManuallySetUsernameAndPassword() {
+        Trainee trainee = new Trainee();
+        trainee.setFirstName("John");
+        trainee.setLastName("Smith");
         trainee.setUsername("John.Smith");
+        trainee.setPassword("abcdef");
         trainee.setActive(true);
         trainee.setDateOfBirth(LocalDate.of(2005, 12, 3));
         trainee.setAddress("Rustaveli N12");
@@ -47,28 +70,7 @@ public class TraineeDaoImplTest {
     }
 
     @Test
-    public void create_shouldGenerateUniqueUsername() {
-        Trainee existing = new Trainee();
-        existing.setUserId(1);
-        existing.setFirstName("John");
-        existing.setLastName("Smith");
-        existing.setUsername("John.Smith");
-
-        trainees.put(1, existing);
-
-        Trainee newTrainee = new Trainee();
-        newTrainee.setFirstName("John");
-        newTrainee.setLastName("Smith");
-
-        traineeDao.create(newTrainee);
-
-        assertEquals(2, newTrainee.getUserId());
-        assertEquals("John.Smith1", newTrainee.getUsername());
-        assertSame(newTrainee, trainees.get(2));
-    }
-
-    @Test
-    public void select_shouldReturnExistingTrainee() {
+    public void findById_shouldReturnExistingTrainee() {
         Trainee existing = new Trainee();
         existing.setUserId(1);
         existing.setFirstName("John");
@@ -76,14 +78,14 @@ public class TraineeDaoImplTest {
 
         trainees.put(1, existing);
 
-        Optional<Trainee> result = traineeDao.select(1);
+        Optional<Trainee> result = traineeDao.findById(1);
 
         assertTrue(result.isPresent());
     }
 
     @Test
-    public void select_shouldReturnEmptyWhenTraineeNotFound() {
-        Optional<Trainee> result = traineeDao.select(999);
+    public void findById_shouldReturnEmptyWhenTraineeNotFound() {
+        Optional<Trainee> result = traineeDao.findById(999);
 
         assertTrue(result.isEmpty());
     }
@@ -123,11 +125,11 @@ public class TraineeDaoImplTest {
     }
 
     @Test
-    public void update_shouldThrowIllegalStateExceptionWhenTraineeEmpty() {
+    public void update_shouldThrowNullPointerExceptionWhenTraineeEmpty() {
         Trainee updated = new Trainee();
 
         assertThrows(
-                IllegalStateException.class,
+                NullPointerException.class,
                 () -> traineeDao.update(updated, 299)
         );
     }
@@ -143,5 +145,13 @@ public class TraineeDaoImplTest {
         traineeDao.delete(1);
 
         assertNull(trainees.get(1));
+    }
+
+    @Test
+    public void findAll_shouldReturnListContainingTrainees() {
+        List<Trainee> traineesList = traineeDao.findAll();
+
+        assertNotNull(traineesList);
+        assertEquals(trainees.size(), traineesList.size());
     }
 }

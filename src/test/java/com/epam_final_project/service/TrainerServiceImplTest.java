@@ -1,5 +1,6 @@
-package service;
+package com.epam_final_project.service;
 
+import com.epam_final_project.dao.TraineeDao;
 import com.epam_final_project.dao.TrainerDao;
 import com.epam_final_project.domain.Trainer;
 import com.epam_final_project.service.impl.TrainerServiceImpl;
@@ -12,6 +13,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -19,6 +21,8 @@ import static org.mockito.Mockito.when;
 public class TrainerServiceImplTest {
     @Mock
     private TrainerDao trainerDao;
+    @Mock
+    private TraineeDao traineeDao;
 
     @InjectMocks
     private TrainerServiceImpl trainerServiceImpl;
@@ -28,6 +32,20 @@ public class TrainerServiceImplTest {
         Trainer trainer = new Trainer();
 
         trainerServiceImpl.createTrainer(trainer);
+
+        verify(trainerDao).create(trainer);
+    }
+
+    @Test
+    public void createTrainer_shouldGenerateUsernameAndPasswordWhenTheyAreNotProvided() {
+        Trainer trainer = new Trainer();
+        trainer.setFirstName("Michael");
+        trainer.setLastName("Desanta");
+
+        trainerServiceImpl.createTrainer(trainer);
+
+        assertEquals("Michael.Desanta", trainer.getUsername());
+        assertNotNull(trainer.getPassword());
 
         verify(trainerDao).create(trainer);
     }
@@ -47,11 +65,11 @@ public class TrainerServiceImplTest {
         Trainer trainer = new Trainer();
         Integer trainerId = 10;
 
-        when(trainerDao.select(trainerId)).thenReturn(Optional.of(trainer));
+        when(trainerDao.findById(trainerId)).thenReturn(Optional.of(trainer));
 
         Optional<Trainer> result = trainerServiceImpl.selectTrainer(trainerId);
 
         assertEquals(result, Optional.of(trainer));
-        verify(trainerDao).select(trainerId);
+        verify(trainerDao).findById(trainerId);
     }
 }

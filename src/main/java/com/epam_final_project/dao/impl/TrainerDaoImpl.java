@@ -2,15 +2,15 @@ package com.epam_final_project.dao.impl;
 
 import com.epam_final_project.dao.TrainerDao;
 import com.epam_final_project.domain.Trainer;
-import com.epam_final_project.util.Utils;
+import com.epam_final_project.util.UsernameAndPasswordGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 
 import java.util.*;
 
-@Component
+@Repository
 public class TrainerDaoImpl implements TrainerDao {
     private static final Logger log = LoggerFactory.getLogger(TrainerDaoImpl.class);
 
@@ -23,40 +23,18 @@ public class TrainerDaoImpl implements TrainerDao {
 
     @Override
     public void create(Trainer trainer) {
-        int nextId = Utils.computeNextId(trainers);
+        int nextId = UsernameAndPasswordGenerator.computeNextId(trainers);
         trainer.setUserId(nextId);
-
-        if (trainer.getUsername() == null || trainer.getUsername().isEmpty()) {
-            trainer.setUsername(Utils.generateUsername(
-                    trainer.getFirstName(),
-                    trainer.getLastName(),
-                    trainers
-                            .values()
-                            .stream()
-                            .map(Trainer::getUsername)
-                            .toList()
-            ));
-        }
-
-        if (trainer.getPassword() == null || trainer.getPassword().isEmpty()) {
-            trainer.setPassword(Utils.generatePassword());
-        }
 
         trainers.put(trainer.getUserId(), trainer);
 
-        log.info("creating trainer: {}", trainer);
-
+        log.info("created trainer: {}", trainer);
         log.info("trainers count: {}", trainers.size());
-        log.info("trainers: {}", trainers);
     }
 
     @Override
     public void update(Trainer updatedTrainer, Integer trainerId) {
-        Optional<Trainer> foundTrainer = trainers
-                .values()
-                .stream()
-                .filter(t -> t.getUserId().equals(trainerId))
-                .findFirst();
+        Optional<Trainer> foundTrainer = Optional.of(trainers.get(trainerId));
 
         log.info("updating trainer: {}", foundTrainer);
 
@@ -70,15 +48,16 @@ public class TrainerDaoImpl implements TrainerDao {
         });
 
         log.info("updated trainer: {}", foundTrainer);
-
-        if (foundTrainer.isEmpty()) {
-            throw new IllegalStateException("trainer with id " + trainerId + " not found");
-        }
     }
 
     @Override
-    public Optional<Trainer> select(Integer trainerId) {
+    public Optional<Trainer> findById(Integer trainerId) {
         log.info("select trainer with id {}", trainerId);
         return Optional.ofNullable(trainers.get(trainerId));
+    }
+
+    @Override
+    public List<Trainer> findAll() {
+        return new ArrayList<>(trainers.values());
     }
 }

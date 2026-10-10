@@ -1,6 +1,7 @@
-package service;
+package com.epam_final_project.service;
 
 import com.epam_final_project.dao.TraineeDao;
+import com.epam_final_project.dao.TrainerDao;
 import com.epam_final_project.domain.Trainee;
 import com.epam_final_project.service.impl.TraineeServiceImpl;
 import org.junit.jupiter.api.Test;
@@ -12,6 +13,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -19,6 +21,8 @@ import static org.mockito.Mockito.when;
 public class TraineeServiceImplTest {
     @Mock
     private TraineeDao traineeDao;
+    @Mock
+    private TrainerDao trainerDao;
 
     @InjectMocks
     private TraineeServiceImpl traineeServiceImpl;
@@ -28,6 +32,20 @@ public class TraineeServiceImplTest {
         Trainee trainee = new Trainee();
 
         traineeServiceImpl.createTrainee(trainee);
+
+        verify(traineeDao).create(trainee);
+    }
+
+    @Test
+    public void createTrainee_shouldGenerateUsernameAndPasswordWhenTheyAreNotProvided() {
+        Trainee trainee = new Trainee();
+        trainee.setFirstName("John");
+        trainee.setLastName("Smith");
+
+        traineeServiceImpl.createTrainee(trainee);
+
+        assertEquals("John.Smith", trainee.getUsername());
+        assertNotNull(trainee.getPassword());
 
         verify(traineeDao).create(trainee);
     }
@@ -56,11 +74,11 @@ public class TraineeServiceImplTest {
         Trainee trainee = new Trainee();
         Integer traineeId = 867;
 
-        when(traineeDao.select(traineeId)).thenReturn(Optional.of(trainee));
+        when(traineeDao.findById(traineeId)).thenReturn(Optional.of(trainee));
 
         Optional<Trainee> result = traineeServiceImpl.selectTrainee(traineeId);
 
         assertEquals(Optional.of(trainee), result);
-        verify(traineeDao).select(traineeId);
+        verify(traineeDao).findById(traineeId);
     }
 }
