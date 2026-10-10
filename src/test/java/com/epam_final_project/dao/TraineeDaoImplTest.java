@@ -124,11 +124,11 @@ public class TraineeDaoImplTest {
     }
 
     @Test
-    public void update_shouldThrowIllegalStateExceptionWhenTraineeEmpty() {
+    public void update_shouldThrowNullPointerExceptionWhenTraineeEmpty() {
         Trainee updated = new Trainee();
 
         assertThrows(
-                IllegalStateException.class,
+                NullPointerException.class,
                 () -> traineeDao.update(updated, 299)
         );
     }

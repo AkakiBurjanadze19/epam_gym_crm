@@ -117,11 +117,11 @@ public class TrainerDaoImplTest {
     }
 
     @Test
-    public void update_shouldThrowIllegalStateExceptionWhenTrainerEmpty() {
+    public void update_shouldThrowNullPointerExceptionTrainerEmpty() {
         Trainer updated = new Trainer();
 
         assertThrows(
-                IllegalStateException.class,
+                NullPointerException.class,
                 () -> trainerDao.update(updated, 200)
         );
     }
