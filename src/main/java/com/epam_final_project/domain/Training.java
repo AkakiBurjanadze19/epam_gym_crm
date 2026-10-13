@@ -6,6 +6,7 @@ import java.util.Objects;
 
 public class Training {
     private Integer id;
+    private Integer traineeId;
     private Integer trainerId;
     private String name;
     private TrainingType type;

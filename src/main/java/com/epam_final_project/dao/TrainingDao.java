@@ -6,5 +6,5 @@ import java.util.Optional;
 
 public interface TrainingDao {
     void create(Training training);
-    Optional<Training> select(Integer trainingId);
+    Optional<Training> findById(Integer trainingId);
 }

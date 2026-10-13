@@ -1,4 +1,4 @@
-package service;
+package com.epam_final_project.service;
 
 import com.epam_final_project.dao.TrainingDao;
 import com.epam_final_project.domain.Training;
@@ -37,11 +37,11 @@ public class TrainingServiceImplTest {
         Training training = new Training();
         Integer trainingId = 219;
 
-        when(trainingDao.select(trainingId)).thenReturn(Optional.of(training));
+        when(trainingDao.findById(trainingId)).thenReturn(Optional.of(training));
 
         Optional<Training> result = trainingServiceImpl.selectTraining(trainingId);
 
         assertEquals(Optional.of(training), result);
-        verify(trainingDao).select(trainingId);
+        verify(trainingDao).findById(trainingId);
     }
 }

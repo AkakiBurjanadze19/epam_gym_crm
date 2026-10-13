@@ -1,4 +1,4 @@
-package storage;
+package com.epam_final_project.storage;
 
 import com.epam_final_project.domain.Trainee;
 import com.epam_final_project.domain.Trainer;
@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class StorageTest {
     @Test
-    public void should_CreateThreeStorageMaps() {
+    public void storage_shouldCreateThreeStorageMaps() {
         try (var context = new AnnotationConfigApplicationContext(Storage.class)) {
             Map<Integer, Trainer> trainers = context.getBean("trainers", Map.class);
             Map<Integer, Trainee> trainees = context.getBean("trainees", Map.class);
@@ -26,7 +26,7 @@ public class StorageTest {
     }
 
     @Test
-    public void storageMaps_shouldBeInitiallyEmpty() {
+    public void storage_shouldCreateThreeEmptyMapsInitially() {
         try (var context = new AnnotationConfigApplicationContext(Storage.class)) {
             Map<Integer, Trainer> trainers = context.getBean("trainers", Map.class);
             Map<Integer, Trainee> trainees = context.getBean("trainees", Map.class);

@@ -7,8 +7,8 @@ import java.util.Random;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Utils {
-    private static final Logger log = LoggerFactory.getLogger(Utils.class);
+public class UsernameAndPasswordGenerator {
+    private static final Logger log = LoggerFactory.getLogger(UsernameAndPasswordGenerator.class);
 
     private static final int PASSWORD_LENGTH = 10;
 
@@ -48,7 +48,6 @@ public class Utils {
         }
 
         String generatedPassword = password.toString();
-        log.debug("Generated password: {}", generatedPassword);
         return generatedPassword;
     }
 }

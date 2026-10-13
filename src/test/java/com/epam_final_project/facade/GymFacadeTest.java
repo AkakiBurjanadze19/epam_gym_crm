@@ -1,4 +1,4 @@
-package facade;
+package com.epam_final_project.facade;
 
 import com.epam_final_project.domain.Trainee;
 import com.epam_final_project.domain.Trainer;
