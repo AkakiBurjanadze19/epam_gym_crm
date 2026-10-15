@@ -12,15 +12,6 @@ public class UsernameAndPasswordGenerator {
 
     private static final int PASSWORD_LENGTH = 10;
 
-    public static <V> int computeNextId(Map<Integer, V> entityMap) {
-        return entityMap.
-                keySet()
-                .stream()
-                .mapToInt(Integer::intValue)
-                .max()
-                .orElse(0) + 1;
-    }
-
     public static String generateUsername(
             String firstName,
             String lastName,
