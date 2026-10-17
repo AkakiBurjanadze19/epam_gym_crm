@@ -1,60 +1,73 @@
 package com.epam_final_project.dao;
 
-import com.epam_final_project.dao.impl.TrainingDaoImpl;
+import com.epam_final_project.config.TestDataSourceConfig;
 import com.epam_final_project.domain.Training;
 import com.epam_final_project.domain.TrainingType;
-import org.junit.jupiter.api.BeforeEach;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
-import java.time.Duration;
 import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
+@ExtendWith(SpringExtension.class)
+@ContextConfiguration(
+        classes = {TestDataSourceConfig.class},
+        loader = AnnotationConfigContextLoader.class
+)
+@Transactional
 public class TrainingDaoImplTest {
-    private TrainingDaoImpl trainingDao;
-    private final Map<Integer, Training> trainings = new HashMap<>();
+    @PersistenceContext
+    private EntityManager em;
 
-    @BeforeEach
-    public void setUp() {
-        trainingDao = new TrainingDaoImpl();
-        trainingDao.setTrainings(trainings);
-    }
+    @Autowired
+    private TrainingDao trainingDao;
 
     @Test
     public void create_shouldCreateTrainingSuccessfully() {
+        // Arrange
         Training training = new Training();
-        training.setTrainerId(1);
         training.setName("Morning Cardio Blast");
-        training.setType(TrainingType.CARDIO);
+        training.setType(new TrainingType("Strength Training"));
         training.setDate(LocalDate.of(2026, 9, 15));
-        training.setDuration(Duration.ofHours(1).plusMinutes(30));
+        training.setDuration(1);
 
+        // Act
         trainingDao.create(training);
 
-        assertEquals(1, training.getId());
-        assertEquals(1, training.getTrainerId());
+        // Assert
         assertEquals("Morning Cardio Blast", training.getName());
-        assertEquals(TrainingType.CARDIO, training.getType());
+        assertEquals("Strength Training", training.getType().getTrainingTypeName());
         assertEquals(LocalDate.of(2026, 9, 15), training.getDate());
-        assertEquals(Duration.ofHours(1).plusMinutes(30), training.getDuration());
-
-        assertEquals(training, trainings.get(1));
+        assertEquals(1, training.getDuration());
     }
 
     @Test
     public void findById_shouldReturnExistingTraining() {
+        // Arrange
         Training training = new Training();
-        training.setTrainerId(1);
         training.setName("Morning Cardio Blast");
-        training.setType(TrainingType.CARDIO);
+        training.setType(new TrainingType("Strength Training"));
         training.setDate(LocalDate.of(2026, 9, 15));
-        training.setDuration(Duration.ofHours(1).plusMinutes(30));
-
+        training.setDuration(1);
         trainingDao.create(training);
 
-        assertEquals(training, trainingDao.findById(1).get());
+        // Act
+        Optional<Training> result = trainingDao.findById(training.getId());
+
+        // Assert
+        assertFalse(result.isEmpty());
+        assertEquals("Morning Cardio Blast", training.getName());
+        assertEquals("Strength Training", training.getType().getTrainingTypeName());
+        assertEquals(LocalDate.of(2026, 9, 15), training.getDate());
+        assertEquals(1, training.getDuration());
     }
 }
