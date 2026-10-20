@@ -7,5 +7,6 @@ import java.util.Optional;
 
 public interface TrainingTypeDao {
     Optional<TrainingType> findById(Integer trainingTypeId);
+    Optional<TrainingType> findByTrainingTypeName(String trainingTypeName);
     List<TrainingType> findAll();
 }
