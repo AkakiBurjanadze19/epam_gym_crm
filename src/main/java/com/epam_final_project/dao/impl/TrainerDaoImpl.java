@@ -35,16 +35,8 @@ public class TrainerDaoImpl implements TrainerDao {
         foundTrainer.ifPresent(trainer -> {
             trainer.setFirstName(updatedTrainer.getFirstName());
             trainer.setLastName(updatedTrainer.getLastName());
-            trainer.setUsername(updatedTrainer.getUsername());
-            trainer.setPassword(updatedTrainer.getPassword());
-            trainer.setActive(updatedTrainer.isActive());
             trainer.setSpecialization(updatedTrainer.getSpecialization());
-
-            trainer.getTrainees().clear();
-            trainer.getTrainees().addAll(updatedTrainer.getTrainees());
-
-            trainer.getTrainings().clear();
-            trainer.getTrainings().addAll(updatedTrainer.getTrainings());
+            trainer.setActive(updatedTrainer.isActive());
         });
 
         log.info("updated trainer: {}", foundTrainer);
@@ -87,6 +79,9 @@ public class TrainerDaoImpl implements TrainerDao {
 
         Root<Training> training = query.from(Training.class);
 
+        training.fetch("trainer", JoinType.LEFT);
+        training.fetch("trainee", JoinType.LEFT);
+
         Join<Training, Trainer> trainer = training.join("trainer");
         Join<Training, Trainee> trainee = training.join("trainee");
 
@@ -109,10 +104,20 @@ public class TrainerDaoImpl implements TrainerDao {
             ));
         }
 
-        if (traineeName != null) {
-            predicates.add(cb.equal(
-                    trainee.get("firstName"),
-                    traineeName
+        if (traineeName != null && !traineeName.isBlank()) {
+            String name = traineeName.trim().toLowerCase();
+
+            Expression<String> firstName = cb.lower(trainee.get("firstName"));
+            Expression<String> lastName = cb.lower(trainee.get("lastName"));
+            Expression<String> fullName = cb.concat(
+                    cb.concat(firstName, ""),
+                    lastName
+            );
+
+            predicates.add(cb.or(
+                    cb.equal(firstName, name),
+                    cb.equal(lastName, name),
+                    cb.equal(fullName, name)
             ));
         }
 
@@ -139,5 +144,15 @@ public class TrainerDaoImpl implements TrainerDao {
                 .setParameter("username", username);
 
         return query.getResultList();
+    }
+
+    @Override
+    public boolean existsByUsername(String username) {
+        String jpql = "SELECT COUNT(t) > 0 FROM Trainer t WHERE t.username = :username";
+
+        TypedQuery<Boolean> query = em.createQuery(jpql, Boolean.class)
+                .setParameter("username", username);
+
+        return query.getSingleResult();
     }
 }
