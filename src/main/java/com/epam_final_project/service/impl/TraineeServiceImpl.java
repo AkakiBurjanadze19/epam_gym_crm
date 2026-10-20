@@ -5,6 +5,12 @@ import com.epam_final_project.dao.TrainerDao;
 import com.epam_final_project.domain.Trainee;
 import com.epam_final_project.domain.Trainer;
 import com.epam_final_project.domain.Training;
+import com.epam_final_project.dto.CreateTraineeRequest;
+import com.epam_final_project.dto.TraineeDto;
+import com.epam_final_project.dto.TrainingDto;
+import com.epam_final_project.mapper.TraineeMapper;
+import com.epam_final_project.mapper.TrainerMapper;
+import com.epam_final_project.mapper.TrainingMapper;
 import com.epam_final_project.service.AuthService;
 import com.epam_final_project.service.TraineeService;
 import com.epam_final_project.util.UsernameAndPasswordGenerator;
@@ -26,6 +32,8 @@ public class TraineeServiceImpl implements TraineeService {
     private TraineeDao traineeDao;
     private TrainerDao trainerDao;
     private AuthService authService;
+    private TraineeMapper traineeMapper;
+    private TrainingMapper trainingMapper;
 
     @Autowired
     public void setTraineeDao(TraineeDao traineeDao) {
@@ -42,10 +50,22 @@ public class TraineeServiceImpl implements TraineeService {
         this.authService = authService;
     }
 
+    @Autowired
+    public void setTraineeMapper(TraineeMapper traineeMapper) {
+        this.traineeMapper = traineeMapper;
+    }
+
+    @Autowired
+    public void setTrainingMapper(TrainingMapper trainingMapper) {
+        this.trainingMapper = trainingMapper;
+    }
+
     @Override
     @Transactional
-    public void createTrainee(Trainee trainee) {
-        log.info("creating trainee: {}", trainee);
+    public void createTrainee(CreateTraineeRequest request) {
+        log.info("creating trainee: {}", request);
+
+        Trainee trainee = traineeMapper.toEntity(request);
 
         validateTrainee(trainee);
 
@@ -59,7 +79,8 @@ public class TraineeServiceImpl implements TraineeService {
                 trainee.setUsername(UsernameAndPasswordGenerator.generateUsername(
                         trainee.getFirstName(),
                         trainee.getLastName(),
-                        getExistingUsernames()
+                        traineeDao,
+                        trainerDao
                 ));
         }
 
@@ -78,34 +99,20 @@ public class TraineeServiceImpl implements TraineeService {
         }
     }
 
-    private List<String> getExistingUsernames() {
-        List<String> traineeUsernames = traineeDao
-                .findAll()
-                .stream()
-                .map(Trainee::getUsername)
-                .toList();
-
-        List<String> trainerUsernames = trainerDao
-                .findAll()
-                .stream()
-                .map(Trainer::getUsername)
-                .toList();
-
-        List<String> existingUsernames = new ArrayList<>();
-        existingUsernames.addAll(traineeUsernames);
-        existingUsernames.addAll(trainerUsernames);
-
-        return existingUsernames;
-    }
-
     @Override
     @Transactional
-    public void updateTrainee(Trainee updatedTrainee, Integer traineeId, String username, String password)
-            throws AuthenticationException {
-        log.info("updating trainee with id {} with updated trainee: {}", traineeId, updatedTrainee);
-        if (!authService.checkTraineeUsernameAndPassword(traineeId, username, password)) {
+    public void updateTrainee(
+            CreateTraineeRequest request,
+            Integer traineeId,
+            String username,
+            String password
+    ) throws AuthenticationException {
+        log.info("updating trainee with id {} with updated trainee: {}", traineeId, request);
+        if (!authService.checkTraineeUsernameAndPassword(username, password)) {
             throw new AuthenticationException("invalid credentials provided");
         }
+
+        Trainee updatedTrainee = traineeMapper.toEntity(request);
 
         traineeDao.update(updatedTrainee, traineeId);
     }
@@ -115,7 +122,7 @@ public class TraineeServiceImpl implements TraineeService {
     public void deleteTrainee(Integer traineeId, String username, String password)
             throws AuthenticationException {
         log.info("deleting trainee with id {}", traineeId);
-        if (!authService.checkTraineeUsernameAndPassword(traineeId, username, password)) {
+        if (!authService.checkTraineeUsernameAndPassword(username, password)) {
             throw new AuthenticationException("invalid credentials provided");
         }
 
@@ -124,15 +131,19 @@ public class TraineeServiceImpl implements TraineeService {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<Trainee> selectTrainee(Integer traineeId) {
+    public Optional<TraineeDto> selectTrainee(Integer traineeId) {
         log.info("selecting trainee with id {}", traineeId);
-        return traineeDao.findById(traineeId);
+        return traineeDao
+                .findById(traineeId)
+                .map(traineeMapper::toDto);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<Trainee> selectTraineeByUsername(String username) {
-        return traineeDao.findByUsername(username);
+    public Optional<TraineeDto> selectTraineeByUsername(String username) {
+        return traineeDao
+                .findByUsername(username)
+                .map(traineeMapper::toDto);
     }
 
     @Override
@@ -143,7 +154,7 @@ public class TraineeServiceImpl implements TraineeService {
             String username,
             String password
     ) throws AuthenticationException {
-        if (!authService.checkTraineeUsernameAndPassword(traineeId, username, password)) {
+        if (!authService.checkTraineeUsernameAndPassword(username, password)) {
             throw new AuthenticationException("invalid credentials provided");
         }
 
@@ -158,24 +169,7 @@ public class TraineeServiceImpl implements TraineeService {
     @Transactional
     public void activateTrainee(Integer traineeId, String username, String password)
             throws AuthenticationException {
-        if (!authService.checkTraineeUsernameAndPassword(traineeId, username, password)) {
-            throw new AuthenticationException("invalid credentials provided");
-        }
-
-        Optional<Trainee> foundTrainee = traineeDao.findById(traineeId);
-
-        foundTrainee.ifPresent(trainee -> {
-            if (!trainee.isActive()) {
-                trainee.setActive(true);
-            }
-        });
-    }
-
-    @Override
-    @Transactional
-    public void deActivateTrainee(Integer traineeId, String username, String password)
-            throws AuthenticationException {
-        if (!authService.checkTraineeUsernameAndPassword(traineeId, username, password)) {
+        if (!authService.checkTraineeUsernameAndPassword(username, password)) {
             throw new AuthenticationException("invalid credentials provided");
         }
 
@@ -183,38 +177,76 @@ public class TraineeServiceImpl implements TraineeService {
 
         foundTrainee.ifPresent(trainee -> {
             if (trainee.isActive()) {
-                trainee.setActive(false);
+                throw new IllegalStateException("Trainee is already active");
             }
+
+            trainee.setActive(true);
         });
     }
 
     @Override
     @Transactional
-    public void deleteTraineeByUsername(String username) {
-        traineeDao.deleteByUsername(username);
+    public void deActivateTrainee(Integer traineeId, String username, String password)
+            throws AuthenticationException {
+        if (!authService.checkTraineeUsernameAndPassword(username, password)) {
+            throw new AuthenticationException("invalid credentials provided");
+        }
+
+        Optional<Trainee> foundTrainee = traineeDao.findById(traineeId);
+
+        foundTrainee.ifPresent(trainee -> {
+            if (!trainee.isActive()) {
+                throw new IllegalStateException("Trainee is already not active");
+            }
+
+            trainee.setActive(false);
+        });
+    }
+
+    @Override
+    @Transactional
+    public void deleteTraineeByUsername(String traineeUsername, String username, String password)
+            throws AuthenticationException {
+        if (!authService.checkTraineeUsernameAndPassword(username, password)) {
+            throw new AuthenticationException("invalid credentials provided");
+        }
+
+        traineeDao.deleteByUsername(traineeUsername);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Training> getTrainingsByUsernameAndCriteria(
+    public List<TrainingDto> getTrainingsByUsernameAndCriteria(
             String username,
             LocalDate fromDate,
             LocalDate toDate,
             String trainerName,
             String trainingTypeName
     ) {
-        return traineeDao.findTrainingsByUsernameAndCriteria(
-                username,
-                fromDate,
-                toDate,
-                trainerName,
-                trainingTypeName
-        );
+        return traineeDao
+                .findTrainingsByUsernameAndCriteria(
+                        username,
+                        fromDate,
+                        toDate,
+                        trainerName,
+                        trainingTypeName
+        ).stream()
+                .map(trainingMapper::toDto)
+                .toList();
     }
 
     @Override
     @Transactional
-    public void updateTraineeTrainers(Integer traineeId, List<Integer> updatedTrainerIds) {
-        traineeDao.updateTrainers(traineeId, updatedTrainerIds);
+    public void updateTraineeTrainers(
+            String traineeUsername,
+            List<String> updatedTrainerUsernames,
+            String username,
+            String password
+    ) throws AuthenticationException {
+        if (!authService.checkTraineeUsernameAndPassword(username, password)) {
+            throw new AuthenticationException("invalid credentials provided");
+        }
+
+        traineeDao.updateTrainers(traineeUsername, updatedTrainerUsernames);
     }
 }
