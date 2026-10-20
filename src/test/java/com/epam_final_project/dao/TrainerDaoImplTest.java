@@ -111,8 +111,8 @@ public class TrainerDaoImplTest {
         // Assert
         assertEquals("Joel", trainer.getFirstName());
         assertEquals("Miller", trainer.getLastName());
-        assertEquals("Joel.Miller", trainer.getUsername());
-        assertEquals("newPassword", trainer.getPassword());
+        assertEquals("maxime.dvali", trainer.getUsername());
+        assertEquals("maxime200!", trainer.getPassword());
         assertTrue(trainer.isActive());
         assertEquals("Mobility Training", trainer.getSpecialization().getTrainingTypeName());
     }

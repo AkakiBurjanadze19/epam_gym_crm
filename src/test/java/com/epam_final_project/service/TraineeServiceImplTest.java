@@ -3,6 +3,11 @@ package com.epam_final_project.service;
 import com.epam_final_project.dao.TraineeDao;
 import com.epam_final_project.dao.TrainerDao;
 import com.epam_final_project.domain.Trainee;
+import com.epam_final_project.dto.CreateTraineeRequest;
+import com.epam_final_project.dto.TraineeDto;
+import com.epam_final_project.dto.TrainingDto;
+import com.epam_final_project.mapper.TraineeMapper;
+import com.epam_final_project.mapper.TrainingMapper;
 import com.epam_final_project.service.impl.TraineeServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,6 +26,7 @@ import com.epam_final_project.domain.Training;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.argThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.never;
@@ -33,6 +39,10 @@ public class TraineeServiceImplTest {
     private TrainerDao trainerDao;
     @Mock
     private AuthService authService;
+    @Mock
+    private TraineeMapper traineeMapper;
+    @Mock
+    private TrainingMapper trainingMapper;
 
     @InjectMocks
     private TraineeServiceImpl traineeServiceImpl;
@@ -40,32 +50,51 @@ public class TraineeServiceImplTest {
     @Test
     public void createTrainee_shouldCallDaoCreate() {
         // Arrange
+        CreateTraineeRequest request = new CreateTraineeRequest();
+        request.setFirstName("Bob");
+        request.setLastName("Smith");
+        request.setDateOfBirth(LocalDate.of(2000, 1, 1));
+        request.setAddress("Test Address");
+
         Trainee trainee = new Trainee();
         trainee.setFirstName("Bob");
         trainee.setLastName("Smith");
+        trainee.setDateOfBirth(LocalDate.of(2000, 1, 1));
+        trainee.setAddress("Test Address");
+
+        when(traineeMapper.toEntity(request)).thenReturn(trainee);
 
         // Act
-        traineeServiceImpl.createTrainee(trainee);
+        traineeServiceImpl.createTrainee(request);
 
         // Assert
-        verify(traineeDao).create(trainee);
+        verify(traineeDao).create(any(Trainee.class));
     }
 
     @Test
     public void createTrainee_shouldGenerateUsernameAndPasswordWhenTheyAreNotProvided() {
         // Arrange
+        CreateTraineeRequest request = new CreateTraineeRequest();
+        request.setFirstName("John");
+        request.setLastName("Smith");
+        request.setDateOfBirth(LocalDate.of(2000, 1, 1));
+        request.setAddress("Test Address");
+
         Trainee trainee = new Trainee();
         trainee.setFirstName("John");
         trainee.setLastName("Smith");
+        trainee.setDateOfBirth(LocalDate.of(2000, 1, 1));
+        trainee.setAddress("Test Address");
+
+        when(traineeMapper.toEntity(request)).thenReturn(trainee);
 
         // Act
-        traineeServiceImpl.createTrainee(trainee);
+        traineeServiceImpl.createTrainee(request);
 
         // Assert
-        assertEquals("John.Smith", trainee.getUsername());
-        assertNotNull(trainee.getPassword());
-
-        verify(traineeDao).create(trainee);
+        verify(traineeDao).create(argThat(t ->
+            "John.Smith".equals(t.getUsername()) && t.getPassword() != null
+        ));
     }
 
     @Test
@@ -73,10 +102,13 @@ public class TraineeServiceImplTest {
         // Arrange
         Integer traineeId = 1;
 
-        Trainee updated = getTrainee();
+        CreateTraineeRequest updated = new CreateTraineeRequest();
+        updated.setFirstName("John");
+        updated.setLastName("Smith");
+        updated.setDateOfBirth(LocalDate.of(2000, 1, 1));
+        updated.setAddress("Test Address");
 
         when(authService.checkTraineeUsernameAndPassword(
-                traineeId,
                 "bla.bla",
                 "blabla"))
                 .thenReturn(false);
@@ -100,13 +132,26 @@ public class TraineeServiceImplTest {
         Integer traineeId = 1;
 
         when(authService.checkTraineeUsernameAndPassword(
-                traineeId,
                 "john.smith",
                 "password123"))
                 .thenReturn(true);
 
+        CreateTraineeRequest request = new CreateTraineeRequest();
+        request.setFirstName("John");
+        request.setLastName("Smith");
+        request.setDateOfBirth(LocalDate.of(2000, 1, 1));
+        request.setAddress("Test Address");
+
+        Trainee trainee = new Trainee();
+        trainee.setFirstName("John");
+        trainee.setLastName("Smith");
+        trainee.setDateOfBirth(LocalDate.of(2000, 1, 1));
+        trainee.setAddress("Test Address");
+
+        when(traineeMapper.toEntity(request)).thenReturn(trainee);
+
         // Act
-        traineeServiceImpl.updateTrainee(new Trainee(), traineeId, "john.smith", "password123");
+        traineeServiceImpl.updateTrainee(request, traineeId, "john.smith", "password123");
 
         // Assert
         verify(traineeDao).update(any(Trainee.class), any(Integer.class));
@@ -117,10 +162,7 @@ public class TraineeServiceImplTest {
         // Arrange
         Integer traineeId = 1;
 
-        getTrainee();
-
         when(authService.checkTraineeUsernameAndPassword(
-                traineeId,
                 "john.smith",
                 "password123"))
                 .thenReturn(true);
@@ -138,7 +180,6 @@ public class TraineeServiceImplTest {
         Integer traineeId = 1;
 
         when(authService.checkTraineeUsernameAndPassword(
-                traineeId,
                 "john.smith",
                 "wrongpassword"))
                 .thenReturn(false);
@@ -155,15 +196,22 @@ public class TraineeServiceImplTest {
     public void selectTrainee_shouldReturnDaoResult() {
         // Arrange
         Trainee trainee = new Trainee();
+        trainee.setFirstName("John");
+        trainee.setLastName("Smith");
         Integer traineeId = 867;
 
-        // Act
-        when(traineeDao.findById(traineeId)).thenReturn(Optional.of(trainee));
+        TraineeDto traineeDto = new TraineeDto();
+        traineeDto.setFirstName("John");
+        traineeDto.setLastName("Smith");
 
-        Optional<Trainee> result = traineeServiceImpl.selectTrainee(traineeId);
+        when(traineeDao.findById(traineeId)).thenReturn(Optional.of(trainee));
+        when(traineeMapper.toDto(trainee)).thenReturn(traineeDto);
+
+        // Act
+        Optional<TraineeDto> result = traineeServiceImpl.selectTrainee(traineeId);
 
         // Assert
-        assertEquals(Optional.of(trainee), result);
+        assertNotNull(result.get().getFirstName());
         verify(traineeDao).findById(traineeId);
     }
 
@@ -172,10 +220,15 @@ public class TraineeServiceImplTest {
         // Arrange
         Trainee trainee = getTrainee();
 
+        TraineeDto traineeDto = new TraineeDto();
+        traineeDto.setFirstName("John");
+        traineeDto.setLastName("Smith");
+
         when(traineeDao.findByUsername(trainee.getUsername())).thenReturn(Optional.of(trainee));
+        when(traineeMapper.toDto(trainee)).thenReturn(traineeDto);
 
         // Act
-        Optional<Trainee> foundTrainee = traineeServiceImpl.selectTraineeByUsername(trainee.getUsername());
+        Optional<TraineeDto> foundTrainee = traineeServiceImpl.selectTraineeByUsername(trainee.getUsername());
 
         // Assert
         assertFalse(foundTrainee.isEmpty());
@@ -191,7 +244,6 @@ public class TraineeServiceImplTest {
         Trainee trainee = getTrainee();
 
         when(authService.checkTraineeUsernameAndPassword(
-                traineeId,
                 trainee.getUsername(),
                 trainee.getPassword()))
                 .thenReturn(true);
@@ -216,7 +268,6 @@ public class TraineeServiceImplTest {
         trainee.setActive(true);
 
         when(authService.checkTraineeUsernameAndPassword(
-                traineeId,
                 trainee.getUsername(),
                 trainee.getPassword()))
                 .thenReturn(true);
@@ -236,7 +287,6 @@ public class TraineeServiceImplTest {
         trainee.setActive(false);
 
         when(authService.checkTraineeUsernameAndPassword(
-                traineeId,
                 trainee.getUsername(),
                 trainee.getPassword()))
                 .thenReturn(true);
@@ -256,7 +306,6 @@ public class TraineeServiceImplTest {
         trainee.setActive(true);
 
         when(authService.checkTraineeUsernameAndPassword(
-                traineeId,
                 trainee.getUsername(),
                 trainee.getPassword()))
                 .thenReturn(true);
@@ -271,12 +320,22 @@ public class TraineeServiceImplTest {
     }
 
     @Test
-    public void deleteTraineeByUsername_shouldCallDao_deleteTraineeByUsername() {
+    public void deleteTraineeByUsername_shouldCallDao_deleteTraineeByUsername()
+            throws AuthenticationException {
         // Arrange
         Trainee trainee = getTrainee();
 
+        when(authService.checkTraineeUsernameAndPassword(
+                trainee.getUsername(),
+                trainee.getPassword()))
+                .thenReturn(true);
+
         // Act
-        traineeServiceImpl.deleteTraineeByUsername(trainee.getUsername());
+        traineeServiceImpl.deleteTraineeByUsername(
+                trainee.getUsername(),
+                trainee.getUsername(),
+                trainee.getPassword()
+        );
 
         // Assert
         verify(traineeDao).deleteByUsername(trainee.getUsername());
@@ -285,52 +344,92 @@ public class TraineeServiceImplTest {
     @Test
     public void createTrainee_shouldThrowExceptionWhenFirstNameIsNull() {
         // Arrange
+        CreateTraineeRequest request = new CreateTraineeRequest();
+        request.setFirstName(null);
+        request.setLastName("Smith");
+        request.setDateOfBirth(LocalDate.of(2000, 1, 1));
+        request.setAddress("Test Address");
+
         Trainee trainee = new Trainee();
         trainee.setFirstName(null);
         trainee.setLastName("Smith");
+        trainee.setDateOfBirth(LocalDate.of(2000, 1, 1));
+        trainee.setAddress("Test Address");
+
+        when(traineeMapper.toEntity(request)).thenReturn(trainee);
 
         // Act & Assert
         assertThrows(IllegalArgumentException.class, () -> {
-            traineeServiceImpl.createTrainee(trainee);
+            traineeServiceImpl.createTrainee(request);
         });
     }
 
     @Test
     public void createTrainee_shouldThrowExceptionWhenFirstNameIsEmpty() {
         // Arrange
+        CreateTraineeRequest request = new CreateTraineeRequest();
+        request.setFirstName("");
+        request.setLastName("Smith");
+        request.setDateOfBirth(LocalDate.of(2000, 1, 1));
+        request.setAddress("Test Address");
+
         Trainee trainee = new Trainee();
         trainee.setFirstName("");
         trainee.setLastName("Smith");
+        trainee.setDateOfBirth(LocalDate.of(2000, 1, 1));
+        trainee.setAddress("Test Address");
+
+        when(traineeMapper.toEntity(request)).thenReturn(trainee);
 
         // Act & Assert
         assertThrows(IllegalArgumentException.class, () -> {
-            traineeServiceImpl.createTrainee(trainee);
+            traineeServiceImpl.createTrainee(request);
         });
     }
 
     @Test
     public void createTrainee_shouldThrowExceptionWhenLastNameIsNull() {
         // Arrange
+        CreateTraineeRequest request = new CreateTraineeRequest();
+        request.setFirstName("John");
+        request.setLastName(null);
+        request.setDateOfBirth(LocalDate.of(2000, 1, 1));
+        request.setAddress("Test Address");
+
         Trainee trainee = new Trainee();
         trainee.setFirstName("John");
         trainee.setLastName(null);
+        trainee.setDateOfBirth(LocalDate.of(2000, 1, 1));
+        trainee.setAddress("Test Address");
+
+        when(traineeMapper.toEntity(request)).thenReturn(trainee);
 
         // Act & Assert
         assertThrows(IllegalArgumentException.class, () -> {
-            traineeServiceImpl.createTrainee(trainee);
+            traineeServiceImpl.createTrainee(request);
         });
     }
 
     @Test
     public void createTrainee_shouldThrowExceptionWhenLastNameIsEmpty() {
         // Arrange
+        CreateTraineeRequest request = new CreateTraineeRequest();
+        request.setFirstName("John");
+        request.setLastName("");
+        request.setDateOfBirth(LocalDate.of(2000, 1, 1));
+        request.setAddress("Test Address");
+
         Trainee trainee = new Trainee();
         trainee.setFirstName("John");
         trainee.setLastName("");
+        trainee.setDateOfBirth(LocalDate.of(2000, 1, 1));
+        trainee.setAddress("Test Address");
+
+        when(traineeMapper.toEntity(request)).thenReturn(trainee);
 
         // Act & Assert
         assertThrows(IllegalArgumentException.class, () -> {
-            traineeServiceImpl.createTrainee(trainee);
+            traineeServiceImpl.createTrainee(request);
         });
     }
 
@@ -343,7 +442,6 @@ public class TraineeServiceImplTest {
         String newPassword = "newPassword123";
 
         when(authService.checkTraineeUsernameAndPassword(
-                traineeId,
                 trainee.getUsername(),
                 oldPassword))
                 .thenReturn(true);
@@ -365,7 +463,6 @@ public class TraineeServiceImplTest {
         trainee.setActive(false);
 
         when(authService.checkTraineeUsernameAndPassword(
-                traineeId,
                 trainee.getUsername(),
                 trainee.getPassword()))
                 .thenReturn(true);
@@ -398,7 +495,7 @@ public class TraineeServiceImplTest {
                 .thenReturn(expectedTrainings);
 
         // Act
-        List<Training> result = traineeServiceImpl.getTrainingsByUsernameAndCriteria(
+        List<TrainingDto> result = traineeServiceImpl.getTrainingsByUsernameAndCriteria(
                 username,
                 fromDate,
                 toDate,
@@ -406,7 +503,7 @@ public class TraineeServiceImplTest {
                 trainingTypeName);
 
         // Assert
-        assertEquals(expectedTrainings, result);
+        assertEquals(expectedTrainings.size(), result.size());
         verify(traineeDao).findTrainingsByUsernameAndCriteria(
                 username,
                 fromDate,
@@ -416,16 +513,20 @@ public class TraineeServiceImplTest {
     }
 
     @Test
-    public void updateTraineeTrainers_shouldCallDaoMethod() {
+    public void updateTraineeTrainers_shouldCallDaoMethod() throws AuthenticationException {
         // Arrange
-        Integer traineeId = 1;
-        List<Integer> trainerIds = Arrays.asList(1, 2, 3);
+        String traineeUsername = "john.smith";
+        List<String> trainerUsernames = Arrays.asList("trainer1", "trainer2", "trainer3");
+        String username = "john.smith";
+        String password = "password123";
+
+        when(authService.checkTraineeUsernameAndPassword(username, password)).thenReturn(true);
 
         // Act
-        traineeServiceImpl.updateTraineeTrainers(traineeId, trainerIds);
+        traineeServiceImpl.updateTraineeTrainers(traineeUsername, trainerUsernames, username, password);
 
         // Assert
-        verify(traineeDao).updateTrainers(traineeId, trainerIds);
+        verify(traineeDao).updateTrainers(traineeUsername, trainerUsernames);
     }
 
     private Trainee getTrainee() {

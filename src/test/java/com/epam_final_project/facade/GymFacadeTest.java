@@ -1,9 +1,6 @@
 package com.epam_final_project.facade;
 
-import com.epam_final_project.domain.Trainee;
-import com.epam_final_project.domain.Trainer;
-import com.epam_final_project.domain.Training;
-import com.epam_final_project.service.AuthService;
+import com.epam_final_project.dto.*;
 import com.epam_final_project.service.TraineeService;
 import com.epam_final_project.service.TrainerService;
 import com.epam_final_project.service.TrainingService;
@@ -12,7 +9,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.naming.AuthenticationException;
 import java.time.LocalDate;
@@ -22,9 +18,6 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -45,26 +38,32 @@ public class GymFacadeTest {
     @Test
     public void createTrainee_shouldDelegateToTraineeService() {
         // Arrange
-        Trainee trainee = new Trainee();
+        CreateTraineeRequest request = new CreateTraineeRequest();
+        request.setFirstName("John");
+        request.setLastName("Smith");
+        request.setDateOfBirth(LocalDate.of(2000, 1, 1));
+        request.setAddress("Test Address");
 
         // Act
-        gymFacade.createTrainee(trainee);
+        gymFacade.createTrainee(request);
 
         // Assert
-        verify(traineeService).createTrainee(trainee);
+        verify(traineeService).createTrainee(request);
     }
 
     @Test
     public void updateTrainee_shouldDelegateToTraineeService() throws AuthenticationException {
         // Arrange
-        Trainee updated = new Trainee();
+        CreateTraineeRequest request = new CreateTraineeRequest();
+        request.setFirstName("Jane");
+        request.setLastName("Doe");
         Integer traineeId = 10;
 
         // Act
-        gymFacade.updateTrainee(updated, traineeId, "john.smith", "password");
+        gymFacade.updateTrainee(request, traineeId, "john.smith", "password");
 
         // Assert
-        verify(traineeService).updateTrainee(updated, traineeId, "john.smith", "password");
+        verify(traineeService).updateTrainee(request, traineeId, "john.smith", "password");
     }
 
     @Test
@@ -82,85 +81,101 @@ public class GymFacadeTest {
     @Test
     public void selectTrainee_shouldDelegateToTraineeService() {
         // Arrange
-        Trainee trainee = new Trainee();
         Integer traineeId = 10;
+        TraineeDto traineeDto = new TraineeDto();
+        traineeDto.setFirstName("John");
+        traineeDto.setLastName("Smith");
 
-        when(traineeService.selectTrainee(traineeId)).thenReturn(Optional.of(trainee));
+        when(traineeService.selectTrainee(traineeId)).thenReturn(Optional.of(traineeDto));
 
         // Act
-        Optional<Trainee> result = gymFacade.selectTrainee(traineeId);
+        Optional<TraineeDto> result = gymFacade.selectTrainee(traineeId);
 
         // Assert
-        assertEquals(Optional.of(trainee), result);
+        assertEquals(Optional.of(traineeDto), result);
         verify(traineeService).selectTrainee(traineeId);
     }
 
     @Test
     public void createTrainer_shouldDelegateToTrainerService() {
         // Arrange
-        Trainer trainer = new Trainer();
+        CreateTrainerRequest request = new CreateTrainerRequest();
+        request.setFirstName("John");
+        request.setLastName("Smith");
+        request.setSpecialization("Yoga");
 
         // Act
-        gymFacade.createTrainer(trainer);
+        gymFacade.createTrainer(request);
 
         // Assert
-        verify(trainerService).createTrainer(trainer);
+        verify(trainerService).createTrainer(request);
     }
 
     @Test
     public void updateTrainer_shouldDelegateToTrainerService() throws AuthenticationException {
         // Arrange
-        Trainer updated = new Trainer();
+        CreateTrainerRequest request = new CreateTrainerRequest();
+        request.setFirstName("Jane");
+        request.setLastName("Doe");
+        request.setSpecialization("Strength");
         Integer trainerId = 10;
 
         // Act
-        gymFacade.updateTrainer(updated, trainerId, "john.smith", "password");
+        gymFacade.updateTrainer(request, trainerId, "john.smith", "password");
 
         // Assert
-        verify(trainerService).updateTrainer(updated, trainerId, "john.smith", "password");
+        verify(trainerService).updateTrainer(request, trainerId, "john.smith", "password");
     }
 
     @Test
     public void selectTrainer_shouldDelegateToTrainerService() {
         // Arrange
-        Trainer trainer = new Trainer();
         Integer trainerId = 139;
+        TrainerDto trainerDto = new TrainerDto();
+        trainerDto.setFirstName("John");
+        trainerDto.setLastName("Smith");
 
-        when(trainerService.selectTrainer(trainerId)).thenReturn(Optional.of(trainer));
+        when(trainerService.selectTrainer(trainerId)).thenReturn(Optional.of(trainerDto));
 
         // Act
-        Optional<Trainer> result = gymFacade.selectTrainer(trainerId);
+        Optional<TrainerDto> result = gymFacade.selectTrainer(trainerId);
 
         // Assert
-        assertEquals(Optional.of(trainer), result);
+        assertEquals(Optional.of(trainerDto), result);
         verify(trainerService).selectTrainer(trainerId);
     }
 
     @Test
     public void createTraining_shouldDelegateToTrainingService() {
         // Arrange
-        Training training = new Training();
+        CreateTrainingRequest request = new CreateTrainingRequest();
+        request.setTraineeUsername("john.smith");
+        request.setTrainerUsername("trainer.jane");
+        request.setName("Morning Yoga");
+        request.setDate(LocalDate.now());
+        request.setDuration(60);
 
         // Act
-        gymFacade.createTraining(training);
+        gymFacade.createTraining(request);
 
         // Assert
-        verify(trainingService).createTraining(training);
+        verify(trainingService).createTraining(request);
     }
 
     @Test
     public void selectTraining_shouldDelegateToTrainingService() {
         // Arrange
-        Training training = new Training();
         Integer trainingId = 789;
+        TrainingDto trainingDto = new TrainingDto();
+        trainingDto.setName("Morning Yoga");
 
-        when(trainingService.selectTraining(trainingId)).thenReturn(Optional.of(training));
+        when(trainingService.selectTraining(trainingId)).thenReturn(Optional.of(trainingDto));
 
         // Act
-        Optional<Training> result = gymFacade.selectTraining(trainingId);
+        Optional<TrainingDto> result = gymFacade.selectTraining(trainingId);
 
         // Assert
-        assertEquals(Optional.of(training), result);
+        assertEquals(Optional.of(trainingDto), result);
         verify(trainingService).selectTraining(trainingId);
     }
 
@@ -216,7 +231,7 @@ public class GymFacadeTest {
         String trainerName = "trainer";
         String trainingTypeName = "strength";
 
-        List<Training> expectedTrainings = new ArrayList<>();
+        List<TrainingDto> expectedTrainings = new ArrayList<>();
         when(traineeService.getTrainingsByUsernameAndCriteria(
                 username,
                 fromDate,
@@ -226,7 +241,7 @@ public class GymFacadeTest {
                 .thenReturn(expectedTrainings);
 
         // Act
-        List<Training> result = gymFacade.getTrainingsByUsernameAndCriteria(
+        List<TrainingDto> result = gymFacade.getTrainingsByUsernameAndCriteria(
                 username,
                 fromDate,
                 toDate,
@@ -244,30 +259,35 @@ public class GymFacadeTest {
     }
 
     @Test
-    public void updateTraineeTrainers_shouldDelegateToTraineeService() {
+    public void updateTraineeTrainers_shouldDelegateToTraineeService() throws AuthenticationException {
         // Arrange
-        Integer traineeId = 1;
-        List<Integer> trainerIds = Arrays.asList(1, 2, 3);
+        String traineeUsername = "john.smith";
+        List<String> trainerUsernames = Arrays.asList("trainer1", "trainer2");
+        String username = "john.smith";
+        String password = "password";
 
         // Act
-        gymFacade.updateTraineeTrainers(traineeId, trainerIds);
+        gymFacade.updateTraineeTrainers(traineeUsername, trainerUsernames, username, password);
 
         // Assert
-        verify(traineeService).updateTraineeTrainers(traineeId, trainerIds);
+        verify(traineeService).updateTraineeTrainers(traineeUsername, trainerUsernames, username, password);
     }
 
     @Test
     public void getTrainersNotAssignedOnTraineeByTraineeUsername_shouldDelegateToTrainerService() {
         // Arrange
         String username = "john.smith";
-        List<Trainer> expectedTrainers = new ArrayList<>();
-        expectedTrainers.add(new Trainer());
+        List<TrainerDto> expectedTrainers = new ArrayList<>();
+        TrainerDto trainerDto = new TrainerDto();
+        trainerDto.setFirstName("Trainer");
+        trainerDto.setLastName("One");
+        expectedTrainers.add(trainerDto);
 
         when(trainerService.getTrainersNotAssignedOnTraineeByTraineeUsername(username))
                 .thenReturn(expectedTrainers);
 
         // Act
-        List<Trainer> result = gymFacade.getTrainersNotAssignedOnTraineeByTraineeUsername(username);
+        List<TrainerDto> result = gymFacade.getTrainersNotAssignedOnTraineeByTraineeUsername(username);
 
         // Assert
         assertEquals(expectedTrainers, result);
@@ -325,7 +345,7 @@ public class GymFacadeTest {
         LocalDate toDate = LocalDate.of(2026, 12, 31);
         String traineeName = "trainee";
 
-        List<Training> expectedTrainings = new ArrayList<>();
+        List<TrainingDto> expectedTrainings = new ArrayList<>();
         when(trainerService.getTrainingsByUsernameAndCriteria(
                 username,
                 fromDate,
@@ -334,7 +354,7 @@ public class GymFacadeTest {
         ).thenReturn(expectedTrainings);
 
         // Act
-        List<Training> result = gymFacade.getTrainingsByUsernameAndCriteria(
+        List<TrainingDto> result = gymFacade.getTrainingsByUsernameAndCriteria(
                 username,
                 fromDate,
                 toDate,
