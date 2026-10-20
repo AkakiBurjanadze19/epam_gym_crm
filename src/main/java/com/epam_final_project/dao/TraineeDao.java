@@ -22,5 +22,6 @@ public interface TraineeDao {
             String trainerName,
             String trainingTypeName
     );
-    void updateTrainers(Integer traineeId, List<Integer> trainerIds);
+    void updateTrainers(String traineeUsername, List<String> updatedTrainerUsernames);
+    boolean existsByUsername(String username);
 }
