@@ -36,17 +36,9 @@ public class TraineeDaoImpl implements TraineeDao {
         foundTrainee.ifPresent(trainee -> {
             trainee.setFirstName(updatedTrainee.getFirstName());
             trainee.setLastName(updatedTrainee.getLastName());
-            trainee.setUsername(updatedTrainee.getUsername());
-            trainee.setPassword(updatedTrainee.getPassword());
-            trainee.setActive(updatedTrainee.isActive());
             trainee.setDateOfBirth(updatedTrainee.getDateOfBirth());
             trainee.setAddress(updatedTrainee.getAddress());
-
-            trainee.getTrainers().clear();
-            trainee.getTrainers().addAll(updatedTrainee.getTrainers());
-
-            trainee.getTrainings().clear();
-            trainee.getTrainings().addAll(updatedTrainee.getTrainings());
+            trainee.setActive(updatedTrainee.isActive());
         });
 
         log.info("updated trainee: {}", foundTrainee);
@@ -88,11 +80,9 @@ public class TraineeDaoImpl implements TraineeDao {
 
     @Override
     public void deleteByUsername(String username) {
-        String jpql = "DELETE FROM Trainee t WHERE t.username = :username";
+        Optional<Trainee> foundTrainee = findByUsername(username);
 
-        Query query = em.createQuery(jpql).setParameter("username", username);
-
-        query.executeUpdate();
+        foundTrainee.ifPresent(t -> em.remove(t));
     }
 
     @Override
@@ -108,6 +98,10 @@ public class TraineeDaoImpl implements TraineeDao {
         CriteriaQuery<Training> query = cb.createQuery(Training.class);
 
         Root<Training> training = query.from(Training.class);
+
+        training.fetch("trainee");
+        training.fetch("trainer");
+        training.fetch("type");
 
         Join<Training, Trainee> trainee = training.join("trainee");
         Join<Training, Trainer> trainer = training.join("trainer");
@@ -133,7 +127,20 @@ public class TraineeDaoImpl implements TraineeDao {
         }
 
         if (trainerName != null) {
-            predicates.add(cb.equal(trainer.get("firstName"), trainerName));
+            String name = trainerName.trim().toLowerCase();
+
+            Expression<String> firstName = cb.lower(trainer.get("firstName"));
+            Expression<String> lastName = cb.lower(trainer.get("lastName"));
+            Expression<String> fullName = cb.concat(
+                    cb.concat(firstName, ""),
+                    lastName
+            );
+
+            predicates.add(cb.or(
+                    cb.equal(firstName, name),
+                    cb.equal(lastName, name),
+                    cb.equal(fullName, name)
+            ));
         }
 
         if (trainingTypeName != null) {
@@ -151,21 +158,48 @@ public class TraineeDaoImpl implements TraineeDao {
     }
 
     @Override
-    public void updateTrainers(Integer traineeId, List<Integer> updatedTrainerIds) {
-        Trainee trainee = em.find(Trainee.class, traineeId);
+    public void updateTrainers(
+            String traineeUsername,
+            List<String> updatedTrainerUsernames
+    ) {
+        String jpql =
+                """
+                SELECT t FROM Trainee t
+                WHERE t.username = :username
+                """;
 
-        if (trainee == null) {
-            throw new EntityNotFoundException("Trainee not found");
+        TypedQuery<Trainee> query = em.createQuery(jpql, Trainee.class)
+                .setParameter("username", traineeUsername);
+
+        Trainee trainee = query
+                .getResultStream()
+                .findFirst()
+                .orElseThrow(
+                () -> new EntityNotFoundException("trainee not found")
+        );
+
+        List<Trainer> trainers = em.createQuery(
+                "SELECT t FROM Trainer t WHERE t.username in :usernames",
+                        Trainer.class
+                )
+                .setParameter("usernames", updatedTrainerUsernames)
+                .getResultList();
+
+        if (trainers.size() != updatedTrainerUsernames.stream().distinct().count()) {
+            throw new EntityNotFoundException("One or more trainer were not found");
         }
-
-        String jpql = "SELECT t FROM Trainer t WHERE t.id IN :ids";
-
-        TypedQuery<Trainer> query = em.createQuery(jpql, Trainer.class)
-                .setParameter("ids", updatedTrainerIds);
-
-        List<Trainer> trainers = query.getResultList();
 
         trainee.getTrainers().clear();
         trainee.getTrainers().addAll(trainers);
+    }
+
+    @Override
+    public boolean existsByUsername(String username) {
+        String jpql = "SELECT COUNT(t) > 0 FROM Trainee t WHERE t.username = :username";
+
+        TypedQuery<Boolean> query = em.createQuery(jpql, Boolean.class)
+                .setParameter("username", username);
+
+        return query.getSingleResult();
     }
 }
