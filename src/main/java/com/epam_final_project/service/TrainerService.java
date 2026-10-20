@@ -1,7 +1,8 @@
 package com.epam_final_project.service;
 
-import com.epam_final_project.domain.Trainer;
-import com.epam_final_project.domain.Training;
+import com.epam_final_project.dto.CreateTrainerRequest;
+import com.epam_final_project.dto.TrainerDto;
+import com.epam_final_project.dto.TrainingDto;
 
 import javax.naming.AuthenticationException;
 import java.time.LocalDate;
@@ -9,15 +10,15 @@ import java.util.List;
 import java.util.Optional;
 
 public interface TrainerService {
-    void createTrainer(Trainer trainer);
+    void createTrainer(CreateTrainerRequest request);
     void updateTrainer(
-            Trainer updatedTrainer,
+            CreateTrainerRequest request,
             Integer trainerId,
             String username,
             String password
     ) throws AuthenticationException;
-    Optional<Trainer> selectTrainer(Integer trainerId);
-    Optional<Trainer> selectTrainerByUsername(String username);
+    Optional<TrainerDto> selectTrainer(Integer trainerId);
+    Optional<TrainerDto> selectTrainerByUsername(String username);
     void changeTrainerPassword(
             String updatedPassword,
             Integer trainerId,
@@ -28,11 +29,11 @@ public interface TrainerService {
             throws AuthenticationException;
     void deActivateTrainer(Integer trainerId, String username, String password)
             throws AuthenticationException;
-    List<Training> getTrainingsByUsernameAndCriteria(
+    List<TrainingDto> getTrainingsByUsernameAndCriteria(
             String trainerUsername,
             LocalDate fromDate,
             LocalDate toDate,
             String traineeName
     );
-    List<Trainer> getTrainersNotAssignedOnTraineeByTraineeUsername(String username);
+    List<TrainerDto> getTrainersNotAssignedOnTraineeByTraineeUsername(String username);
 }
