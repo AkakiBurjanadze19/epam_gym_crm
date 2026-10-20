@@ -1,9 +1,9 @@
 package com.epam_final_project.util;
 
-import java.util.List;
-import java.util.Map;
 import java.util.Random;
 
+import com.epam_final_project.dao.TraineeDao;
+import com.epam_final_project.dao.TrainerDao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,13 +15,14 @@ public class UsernameAndPasswordGenerator {
     public static String generateUsername(
             String firstName,
             String lastName,
-            List<String> existingUsernames
+            TraineeDao traineeDao,
+            TrainerDao trainerDao
     ) {
         String base = firstName + "." + lastName;
 
         String username = base;
         int suffix = 1;
-        while (existingUsernames.contains(username)) {
+        while (traineeDao.existsByUsername(username) || trainerDao.existsByUsername(username)) {
             username = base + (suffix++);
         }
 
