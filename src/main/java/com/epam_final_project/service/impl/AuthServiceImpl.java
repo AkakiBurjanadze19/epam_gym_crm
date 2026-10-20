@@ -20,32 +20,26 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public boolean checkTraineeUsernameAndPassword(Integer traineeId, String username, String password) {
-        if (traineeId == null || username == null || password == null) {
+    public boolean checkTraineeUsernameAndPassword(String username, String password) {
+        if (username == null || password == null) {
             throw new IllegalArgumentException("trainee id, username and password must be provided");
         }
 
-        Optional<Trainee> foundTraineeOpt = traineeDao.findById(traineeId);
-
-        if (foundTraineeOpt.isEmpty()) return false;
-
-        Trainee foundTrainee = foundTraineeOpt.get();
-
-        return (foundTrainee.getUsername().equals(username)) && (foundTrainee.getPassword().equals(password));
+        return traineeDao
+                .findByUsername(username)
+                .map(trainee -> trainee.getPassword().equals(password))
+                .orElse(false);
     }
 
     @Override
-    public boolean checkTrainerUsernameAndPassword(Integer trainerId, String username, String password) {
-        if (trainerId == null || username == null || password == null) {
+    public boolean checkTrainerUsernameAndPassword(String username, String password) {
+        if (username == null || password == null) {
             throw new IllegalArgumentException("trainer id, username and password must be provided");
         }
 
-        Optional<Trainer> foundTrainerOpt = trainerDao.findById(trainerId);
-
-        if (foundTrainerOpt.isEmpty()) return false;
-
-        Trainer foundTrainer = foundTrainerOpt.get();
-
-        return (foundTrainer.getUsername().equals(username)) && (foundTrainer.getPassword().equals(password));
+        return trainerDao
+                .findByUsername(username)
+                .map(trainer -> trainer.getPassword().equals(password))
+                .orElse(false);
     }
 }
