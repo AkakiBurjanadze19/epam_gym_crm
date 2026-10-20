@@ -21,6 +21,17 @@ public class TrainingTypeDaoImpl implements TrainingTypeDao {
     }
 
     @Override
+    public Optional<TrainingType> findByTrainingTypeName(String trainingTypeName) {
+        String jpql = "SELECT t FROM TrainingType t WHERE t.trainingTypeName = :name";
+
+        TypedQuery<TrainingType> query = em
+                .createQuery(jpql, TrainingType.class)
+                .setParameter("name", trainingTypeName);
+
+        return query.getResultStream().findFirst();
+    }
+
+    @Override
     public List<TrainingType> findAll() {
         String jpql = "SELECT t FROM TrainingType t";
 
