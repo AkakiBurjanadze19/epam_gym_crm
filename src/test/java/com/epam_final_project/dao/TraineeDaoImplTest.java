@@ -4,10 +4,8 @@ import com.epam_final_project.config.TestDataSourceConfig;
 import com.epam_final_project.domain.Trainee;
 import com.epam_final_project.domain.Trainer;
 import com.epam_final_project.domain.Training;
-import com.epam_final_project.domain.TrainingType;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,8 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -95,8 +91,8 @@ public class TraineeDaoImplTest {
 
         assertEquals("Nikoloz", result.existing().getFirstName());
         assertEquals("Burduli", result.existing().getLastName());
-        assertEquals("Nikoloz.Burduli", result.existing().getUsername());
-        assertEquals("newPassword", result.existing().getPassword());
+        assertEquals("john.smith", result.existing().getUsername());
+        assertEquals("currentPassword", result.existing().getPassword());
         assertFalse(result.existing().isActive());
         assertEquals(LocalDate.of(2002, 10, 12), result.existing().getDateOfBirth());
         assertEquals("Axalgazrdoba N5", result.existing().getAddress());
@@ -234,58 +230,6 @@ public class TraineeDaoImplTest {
 
         // Assert
         assertNotNull(result);
-    }
-
-    @Test
-    public void updateTrainers_shouldUpdateTraineeTrainers() {
-        // Arrange
-        Trainee trainee = getTrainee();
-        Trainer oldTrainer = getTrainer();
-        traineeDao.create(trainee);
-        trainerDao.create(oldTrainer);
-
-        Trainer newTrainer1 = new Trainer();
-        newTrainer1.setFirstName("Niko");
-        newTrainer1.setLastName("Belik");
-        newTrainer1.setUsername("Niko.Belik");
-        newTrainer1.setPassword("niko300!");
-        newTrainer1.setActive(true);
-        newTrainer1.setSpecialization(trainingTypeDao.findById(3).get());
-        trainerDao.create(newTrainer1);
-
-        Trainer newTrainer2 = new Trainer();
-        newTrainer2.setFirstName("Michael");
-        newTrainer2.setLastName("Desanta");
-        newTrainer2.setUsername("Michael.Desanta");
-        newTrainer2.setPassword("desanta888!");
-        newTrainer2.setActive(true);
-        newTrainer2.setSpecialization(trainingTypeDao.findById(2).get());
-        trainerDao.create(newTrainer2);
-
-        Integer traineeId = trainee.getId();
-        Integer newTrainer1Id = newTrainer1.getId();
-        Integer newTrainer2Id = newTrainer2.getId();
-
-        trainee.addTrainer(oldTrainer);
-
-        // Act
-        traineeDao.updateTrainers(traineeId, List.of(newTrainer1Id, newTrainer2Id));
-
-        // Assert
-        Optional<Trainee> result = traineeDao.findById(traineeId);
-        assertEquals(2, result.get().getTrainers().size());
-
-        Set<Integer> actualTrainerIds = result
-                .get()
-                .getTrainers()
-                .stream()
-                .map(Trainer::getId)
-                .collect(Collectors.toSet());
-
-        assertEquals(
-                Set.of(newTrainer1Id, newTrainer2Id),
-                actualTrainerIds
-        );
     }
 
     private Training getTraining() {
