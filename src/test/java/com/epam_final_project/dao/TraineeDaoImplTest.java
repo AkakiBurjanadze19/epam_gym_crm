@@ -1,108 +1,117 @@
 package com.epam_final_project.dao;
 
-import com.epam_final_project.dao.impl.TraineeDaoImpl;
+import com.epam_final_project.config.TestDataSourceConfig;
 import com.epam_final_project.domain.Trainee;
+import com.epam_final_project.domain.Trainer;
+import com.epam_final_project.domain.Training;
+import com.epam_final_project.domain.TrainingType;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.context.support.AnnotationConfigContextLoader;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@ExtendWith(SpringExtension.class)
+@ContextConfiguration(
+        classes = {TestDataSourceConfig.class},
+        loader = AnnotationConfigContextLoader.class
+)
+@Transactional
 public class TraineeDaoImplTest {
-    private TraineeDaoImpl traineeDao;
-    private final Map<Integer, Trainee> trainees = new HashMap<>();
+    @PersistenceContext
+    private EntityManager em;
+
+    @Autowired
+    private TraineeDao traineeDao;
+
+    @Autowired
+    private TrainerDao trainerDao;
+
+    @Autowired
+    private TrainingDao trainingDao;
+
+    @Autowired
+    private TrainingTypeDao trainingTypeDao;
 
     @BeforeEach
     public void setUp() {
-        traineeDao = new TraineeDaoImpl();
-        traineeDao.setTrainees(trainees);
+        em.createQuery("DELETE FROM Trainee").executeUpdate();
     }
 
     @Test
     public void create_shouldCreateTraineeSuccessfully() {
-        Trainee trainee = new Trainee();
-        trainee.setFirstName("John");
-        trainee.setLastName("Smith");
-        trainee.setActive(true);
-        trainee.setDateOfBirth(LocalDate.of(2005, 12, 3));
-        trainee.setAddress("Rustaveli N12");
+        Trainee trainee = getTrainee();
 
-        traineeDao.create(trainee);
-
-        assertEquals(1, trainee.getUserId());
         assertEquals("John", trainee.getFirstName());
         assertEquals("Smith", trainee.getLastName());
+        assertEquals("john.smith", trainee.getUsername());
         assertTrue(trainee.isActive());
         assertEquals(LocalDate.of(2005, 12, 3), trainee.getDateOfBirth());
         assertEquals("Rustaveli N12", trainee.getAddress());
-
-        assertEquals(trainee, trainees.get(1));
-    }
-
-    @Test
-    public void create_shouldCreateTraineeWithManuallySetUsernameAndPassword() {
-        Trainee trainee = new Trainee();
-        trainee.setFirstName("John");
-        trainee.setLastName("Smith");
-        trainee.setUsername("John.Smith");
-        trainee.setPassword("abcdef");
-        trainee.setActive(true);
-        trainee.setDateOfBirth(LocalDate.of(2005, 12, 3));
-        trainee.setAddress("Rustaveli N12");
-
-        traineeDao.create(trainee);
-
-        assertEquals(1, trainee.getUserId());
-        assertEquals("John", trainee.getFirstName());
-        assertEquals("Smith", trainee.getLastName());
-        assertEquals("John.Smith", trainee.getUsername());
-        assertTrue(trainee.isActive());
-        assertEquals(LocalDate.of(2005, 12, 3), trainee.getDateOfBirth());
-        assertEquals("Rustaveli N12", trainee.getAddress());
-        assertNotNull(trainee.getPassword());
-
-        assertEquals(trainee, trainees.get(1));
+        assertEquals("password123", trainee.getPassword());
     }
 
     @Test
     public void findById_shouldReturnExistingTrainee() {
-        Trainee existing = new Trainee();
-        existing.setUserId(1);
-        existing.setFirstName("John");
-        existing.setLastName("Smith");
+        Trainee trainee = getTrainee();
 
-        trainees.put(1, existing);
-
-        Optional<Trainee> result = traineeDao.findById(1);
+        Optional<Trainee> result = traineeDao.findById(trainee.getId());
 
         assertTrue(result.isPresent());
+        assertEquals("John", result.get().getFirstName());
+        assertEquals("Smith", result.get().getLastName());
+        assertEquals("john.smith", result.get().getUsername());
+        assertEquals("password123", result.get().getPassword());
     }
 
     @Test
     public void findById_shouldReturnEmptyWhenTraineeNotFound() {
-        Optional<Trainee> result = traineeDao.findById(999);
+        Integer traineeId = 999;
+
+        Optional<Trainee> result = traineeDao.findById(traineeId);
 
         assertTrue(result.isEmpty());
     }
 
     @Test
     public void update_shouldUpdateTraineeFields() {
+        Result result = getUpdatedResult();
+
+        traineeDao.update(result.updatedTrainee(), result.existing().getId());
+
+        assertEquals("Nikoloz", result.existing().getFirstName());
+        assertEquals("Burduli", result.existing().getLastName());
+        assertEquals("Nikoloz.Burduli", result.existing().getUsername());
+        assertEquals("newPassword", result.existing().getPassword());
+        assertFalse(result.existing().isActive());
+        assertEquals(LocalDate.of(2002, 10, 12), result.existing().getDateOfBirth());
+        assertEquals("Axalgazrdoba N5", result.existing().getAddress());
+    }
+
+    private Result getUpdatedResult() {
         Trainee existing = new Trainee();
-        existing.setUserId(1);
         existing.setFirstName("John");
         existing.setLastName("Smith");
-        existing.setUsername("John.Smith");
+        existing.setUsername("john.smith");
         existing.setPassword("currentPassword");
         existing.setActive(true);
         existing.setDateOfBirth(LocalDate.of(2005, 12, 3));
         existing.setAddress("Rustaveli N12");
-
-        trainees.put(1, existing);
+        traineeDao.create(existing);
 
         Trainee updatedTrainee = new Trainee();
         updatedTrainee.setFirstName("Nikoloz");
@@ -112,46 +121,205 @@ public class TraineeDaoImplTest {
         updatedTrainee.setActive(false);
         updatedTrainee.setDateOfBirth(LocalDate.of(2002, 10, 12));
         updatedTrainee.setAddress("Axalgazrdoba N5");
+        Result result = new Result(existing, updatedTrainee);
+        return result;
+    }
 
-        traineeDao.update(updatedTrainee, 1);
-
-        assertEquals("Nikoloz", existing.getFirstName());
-        assertEquals("Burduli", existing.getLastName());
-        assertEquals("Nikoloz.Burduli", existing.getUsername());
-        assertEquals("newPassword", existing.getPassword());
-        assertFalse(existing.isActive());
-        assertEquals(LocalDate.of(2002, 10, 12), existing.getDateOfBirth());
-        assertEquals("Axalgazrdoba N5", existing.getAddress());
+    private record Result(Trainee existing, Trainee updatedTrainee) {
     }
 
     @Test
-    public void update_shouldThrowNullPointerExceptionWhenTraineeEmpty() {
+    public void update_shouldNotThrowExceptionWhenTraineeEmpty() {
+        // Arrange
+        Integer traineeId = 299;
         Trainee updated = new Trainee();
 
-        assertThrows(
-                NullPointerException.class,
-                () -> traineeDao.update(updated, 299)
-        );
+        // Assert
+        assertDoesNotThrow(() -> {
+            traineeDao.update(updated, traineeId);
+        });
     }
 
     @Test
     public void delete_shouldDeleteTraineeSuccessfully() {
-        Trainee trainee = new Trainee();
-        trainee.setFirstName("John");
-        trainee.setLastName("Smith");
+        // Arrange
+        Trainee trainee = getTrainee();
 
-        traineeDao.create(trainee);
+        // Act
+        traineeDao.delete(trainee.getId());
 
-        traineeDao.delete(1);
-
-        assertNull(trainees.get(1));
+        // Assert
+        Optional<Trainee> result = traineeDao.findById(trainee.getId());
+        assertTrue(result.isEmpty());
     }
 
     @Test
     public void findAll_shouldReturnListContainingTrainees() {
+        // Arrange
+        getTrainee();
+
+        // Act
         List<Trainee> traineesList = traineeDao.findAll();
 
+        // Assert
         assertNotNull(traineesList);
-        assertEquals(trainees.size(), traineesList.size());
+        assertEquals(1, traineesList.size());
+        assertEquals("John", traineesList.get(0).getFirstName());
+        assertEquals("Smith", traineesList.get(0).getLastName());
+        assertEquals("john.smith", traineesList.get(0).getUsername());
+        assertEquals("password123", traineesList.get(0).getPassword());
+    }
+
+    @Test
+    public void findByUsername_shouldReturnExistingTrainee() {
+        // Arrange
+        Trainee trainee = getTrainee();
+
+        // Act
+        Optional<Trainee> foundTrainee = traineeDao.findByUsername(trainee.getUsername());
+
+        // Assert
+        assertFalse(foundTrainee.isEmpty());
+        assertEquals("john.smith", foundTrainee.get().getUsername());
+        assertEquals("password123", foundTrainee.get().getPassword());
+    }
+
+    @Test
+    public void findByUsername_shouldReturnEmptyWhenTraineeNotFound() {
+        // Arrange
+        String traineeUsername = "Dustin Morno";
+
+        // Act
+        Optional<Trainee> foundTrainee = traineeDao.findByUsername(traineeUsername);
+
+        // Assert
+        assertTrue(foundTrainee.isEmpty());
+    }
+
+    @Test
+    public void deleteByUsername_shouldSuccessfullyDeleteExistingTrainee() {
+        // Arrange
+        Trainee trainee = getTrainee();
+
+        // Act
+        traineeDao.deleteByUsername(trainee.getUsername());
+
+        Optional<Trainee> foundTrainee = traineeDao.findByUsername(trainee.getUsername());
+
+        // Assert
+        assertTrue(foundTrainee.isEmpty());
+    }
+
+    @Test
+    public void findTrainingsByUsernameAndCriteria_returnListOfTrainings() {
+        // Arrange
+        Trainee trainee = getTrainee();
+
+        Trainer trainer = getTrainer();
+
+        Training training = getTraining();
+
+        trainer.addTrainee(trainee);
+        trainee.addTrainer(trainer);
+        trainer.addTraining(training);
+
+        // Act
+        List<Training> result = traineeDao.findTrainingsByUsernameAndCriteria(
+                "Joel.Miller",
+                null,
+                null,
+                null,
+                null
+        );
+
+        // Assert
+        assertNotNull(result);
+    }
+
+    @Test
+    public void updateTrainers_shouldUpdateTraineeTrainers() {
+        // Arrange
+        Trainee trainee = getTrainee();
+        Trainer oldTrainer = getTrainer();
+        traineeDao.create(trainee);
+        trainerDao.create(oldTrainer);
+
+        Trainer newTrainer1 = new Trainer();
+        newTrainer1.setFirstName("Niko");
+        newTrainer1.setLastName("Belik");
+        newTrainer1.setUsername("Niko.Belik");
+        newTrainer1.setPassword("niko300!");
+        newTrainer1.setActive(true);
+        newTrainer1.setSpecialization(trainingTypeDao.findById(3).get());
+        trainerDao.create(newTrainer1);
+
+        Trainer newTrainer2 = new Trainer();
+        newTrainer2.setFirstName("Michael");
+        newTrainer2.setLastName("Desanta");
+        newTrainer2.setUsername("Michael.Desanta");
+        newTrainer2.setPassword("desanta888!");
+        newTrainer2.setActive(true);
+        newTrainer2.setSpecialization(trainingTypeDao.findById(2).get());
+        trainerDao.create(newTrainer2);
+
+        Integer traineeId = trainee.getId();
+        Integer newTrainer1Id = newTrainer1.getId();
+        Integer newTrainer2Id = newTrainer2.getId();
+
+        trainee.addTrainer(oldTrainer);
+
+        // Act
+        traineeDao.updateTrainers(traineeId, List.of(newTrainer1Id, newTrainer2Id));
+
+        // Assert
+        Optional<Trainee> result = traineeDao.findById(traineeId);
+        assertEquals(2, result.get().getTrainers().size());
+
+        Set<Integer> actualTrainerIds = result
+                .get()
+                .getTrainers()
+                .stream()
+                .map(Trainer::getId)
+                .collect(Collectors.toSet());
+
+        assertEquals(
+                Set.of(newTrainer1Id, newTrainer2Id),
+                actualTrainerIds
+        );
+    }
+
+    private Training getTraining() {
+        Training training = new Training();
+        training.setName("Morning Cardio Blast");
+        training.setType(trainingTypeDao.findById(3).get());
+        training.setDate(LocalDate.of(2026, 9, 15));
+        training.setDuration(1);
+        trainingDao.create(training);
+        return training;
+    }
+
+    private Trainer getTrainer() {
+        Trainer trainer = new Trainer();
+        trainer.setFirstName("Joel");
+        trainer.setLastName("Miller");
+        trainer.setUsername("Joel.Miller");
+        trainer.setPassword("newPassword");
+        trainer.setActive(true);
+        trainer.setSpecialization(trainingTypeDao.findById(3).get());
+        trainerDao.create(trainer);
+        return trainer;
+    }
+
+    private Trainee getTrainee() {
+        Trainee trainee = new Trainee();
+        trainee.setFirstName("John");
+        trainee.setLastName("Smith");
+        trainee.setUsername("john.smith");
+        trainee.setPassword("password123");
+        trainee.setActive(true);
+        trainee.setDateOfBirth(LocalDate.of(2005, 12, 3));
+        trainee.setAddress("Rustaveli N12");
+        traineeDao.create(trainee);
+        return trainee;
     }
 }

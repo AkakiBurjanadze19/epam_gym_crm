@@ -1,30 +1,51 @@
 package com.epam_final_project.domain;
 
-import java.time.Duration;
+import jakarta.persistence.*;
+
 import java.time.LocalDate;
 import java.util.Objects;
 
+@Entity
+@Table(name = "trainings")
 public class Training {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
-    private Integer traineeId;
-    private Integer trainerId;
+
+    @ManyToOne
+    @JoinColumn(name = "trainee_id")
+    private Trainee trainee;
+
+    @ManyToOne
+    @JoinColumn(name = "trainer_id")
+    private Trainer trainer;
+
+    @Column(name = "training_name", nullable = false)
     private String name;
+
+    @ManyToOne
+    @JoinColumn(name = "training_type_id")
     private TrainingType type;
+
+    @Column(name = "training_date", nullable = false)
     private LocalDate date;
-    private Duration duration;
+
+    @Column(name = "training_duration")
+    private int duration;
 
     public Training() {
     }
 
     public Training(
-            Integer id,
-            Integer trainerId,
+            Trainee trainee,
+            Trainer trainer,
             String name,
             TrainingType type,
-            LocalDate date, Duration duration
+            LocalDate date,
+            int duration
     ) {
-        this.id = id;
-        this.trainerId = trainerId;
+        this.trainee = trainee;
+        this.trainer = trainer;
         this.name = name;
         this.type = type;
         this.date = date;
@@ -39,12 +60,24 @@ public class Training {
         this.id = id;
     }
 
-    public Integer getTrainerId() {
-        return trainerId;
+    public Trainer getTrainer() {
+        return trainer;
     }
 
-    public void setTrainerId(Integer trainerId) {
-        this.trainerId = trainerId;
+    public void setTrainer(Trainer trainer) {
+        this.trainer = trainer;
+    }
+
+    public Trainee getTrainee() {
+        return trainee;
+    }
+
+    public void setTrainee(Trainee trainee) {
+        this.trainee = trainee;
+    }
+
+    public Integer getTrainerId() {
+        return trainer.getId();
     }
 
     public String getName() {
@@ -71,11 +104,11 @@ public class Training {
         this.date = date;
     }
 
-    public Duration getDuration() {
+    public int getDuration() {
         return duration;
     }
 
-    public void setDuration(Duration duration) {
+    public void setDuration(int duration) {
         this.duration = duration;
     }
 
@@ -83,19 +116,25 @@ public class Training {
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         Training training = (Training) o;
-        return Objects.equals(id, training.id) && Objects.equals(trainerId, training.trainerId) && Objects.equals(name, training.name) && type == training.type && Objects.equals(date, training.date) && Objects.equals(duration, training.duration);
+        return duration == training.duration
+                && Objects.equals(id, training.id)
+                && Objects.equals(trainee, training.trainee)
+                && Objects.equals(trainer, training.trainer)
+                && Objects.equals(name, training.name)
+                && type == training.type && Objects.equals(date, training.date);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, trainerId, name, type, date, duration);
+        return Objects.hash(id, trainee, trainer, name, type, date, duration);
     }
 
     @Override
     public String toString() {
         return "Training{" +
                 "id=" + id +
-                ", trainerId=" + trainerId +
+                ", trainee=" + trainee +
+                ", trainer=" + trainer +
                 ", name='" + name + '\'' +
                 ", type=" + type +
                 ", date=" + date +
