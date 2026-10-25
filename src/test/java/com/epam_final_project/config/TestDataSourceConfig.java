@@ -14,12 +14,14 @@ import javax.sql.DataSource;
 import java.util.Properties;
 
 @Configuration
-@ComponentScan(basePackages = "com.epam_final_project")
+@ComponentScan(basePackages = "com.epam_final_project.dao")
 public class TestDataSourceConfig {
     @Bean
     public DataSource dataSource() {
         return new EmbeddedDatabaseBuilder()
                 .setType(EmbeddedDatabaseType.H2)
+                .addScript("schema.sql")
+                .addScript("data.sql")
                 .build();
     }
 
@@ -35,7 +37,7 @@ public class TestDataSourceConfig {
                 "jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=false");
         jpaProperties.put("hibernate.connection.username", "sa");
         jpaProperties.put("hibernate.connection.password", "");
-        jpaProperties.put("hibernate.hbm2ddl.auto", "create-drop");
+        jpaProperties.put("hibernate.hbm2ddl.auto", "none");
         jpaProperties.put("hibernate.show_sql", "false");
         jpaProperties.put("hibernate.format_sql", "false");
         em.setJpaProperties(jpaProperties);

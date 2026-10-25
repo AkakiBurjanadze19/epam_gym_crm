@@ -5,12 +5,17 @@ import com.epam_final_project.dao.TrainerDao;
 import com.epam_final_project.dao.TrainingTypeDao;
 import com.epam_final_project.domain.Trainer;
 import com.epam_final_project.domain.TrainingType;
-import com.epam_final_project.dto.CreateTrainerRequest;
-import com.epam_final_project.dto.TrainerDto;
-import com.epam_final_project.dto.TrainingDto;
+import com.epam_final_project.domain.Training;
+import com.epam_final_project.domain.User;
+import com.epam_final_project.dto.trainer.request.UpdateTrainerProfileRequestDto;
+import com.epam_final_project.dto.trainer.response.TrainerSummaryDto;
+import com.epam_final_project.dto.training.response.TrainerTrainingResponseDto;
+import com.epam_final_project.dto.trainer.request.CreateTrainerRequest;
 import com.epam_final_project.mapper.TrainerMapper;
 import com.epam_final_project.mapper.TrainingMapper;
+import com.epam_final_project.mapper.TraineeMapper;
 import com.epam_final_project.service.impl.TrainerServiceImpl;
+import com.epam_final_project.util.UsernameConflictChecker;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -20,13 +25,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Optional;
 
 import javax.naming.AuthenticationException;
+import java.lang.reflect.Field;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
-
-import com.epam_final_project.domain.Training;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -37,7 +39,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyBoolean;
+import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.argThat;
+import static org.mockito.Mockito.doNothing;
 
 @ExtendWith(MockitoExtension.class)
 public class TrainerServiceImplTest {
@@ -53,6 +58,10 @@ public class TrainerServiceImplTest {
     private TrainerMapper trainerMapper;
     @Mock
     private TrainingMapper trainingMapper;
+    @Mock
+    private TraineeMapper traineeMapper;
+    @Mock
+    private UsernameConflictChecker usernameConflictChecker;
 
     @InjectMocks
     private TrainerServiceImpl trainerServiceImpl;
@@ -74,6 +83,7 @@ public class TrainerServiceImplTest {
 
         when(trainerMapper.toEntity(request)).thenReturn(trainer);
         when(trainingTypeDao.findByTrainingTypeName("Yoga")).thenReturn(Optional.of(trainingType));
+        doNothing().when(usernameConflictChecker).checkUsernameConflict(any(), any(), anyBoolean());
 
         // Act
         trainerServiceImpl.createTrainer(request);
@@ -99,6 +109,7 @@ public class TrainerServiceImplTest {
 
         when(trainerMapper.toEntity(request)).thenReturn(trainer);
         when(trainingTypeDao.findByTrainingTypeName("Strength")).thenReturn(Optional.of(trainingType));
+        doNothing().when(usernameConflictChecker).checkUsernameConflict(any(), any(), anyBoolean());
 
         // Act
         trainerServiceImpl.createTrainer(request);
@@ -112,25 +123,25 @@ public class TrainerServiceImplTest {
     @Test
     public void updateTrainer_shouldCallDaoUpdate() throws AuthenticationException {
         // Arrange
-        Integer trainerId = 1;
-
-        CreateTrainerRequest request = new CreateTrainerRequest();
+        UpdateTrainerProfileRequestDto request = new UpdateTrainerProfileRequestDto();
         request.setFirstName("Joel");
         request.setLastName("Miller");
-        request.setSpecialization("Mobility Training");
+        request.setIsActive(true);
 
         Trainer trainer = new Trainer();
+        setId(trainer, 1);
         trainer.setFirstName("Joel");
         trainer.setLastName("Miller");
+        trainer.setTrainees(new ArrayList<>());
 
         when(authService.checkTrainerUsernameAndPassword(
                 "Joel.Miller",
                 "newPassword"))
                 .thenReturn(true);
-        when(trainerMapper.toEntity(request)).thenReturn(trainer);
+        when(trainerDao.findByUsername("Joel.Miller")).thenReturn(Optional.of(trainer));
 
         // Act
-        trainerServiceImpl.updateTrainer(request, trainerId, "Joel.Miller", "newPassword");
+        trainerServiceImpl.updateTrainer(request, "Joel.Miller", "newPassword");
 
         // Assert
         verify(trainerDao).update(any(Trainer.class), any(Integer.class));
@@ -139,11 +150,10 @@ public class TrainerServiceImplTest {
     @Test
     public void updateTrainer_shouldThrowExceptionWhenInvalidCredentials() throws AuthenticationException {
         // Arrange
-        Integer trainerId = 1;
-        CreateTrainerRequest request = new CreateTrainerRequest();
+        UpdateTrainerProfileRequestDto request = new UpdateTrainerProfileRequestDto();
         request.setFirstName("Joel");
         request.setLastName("Miller");
-        request.setSpecialization("Mobility Training");
+        request.setIsActive(true);
 
         when(authService.checkTrainerUsernameAndPassword(
                 "Joel.Miller",
@@ -152,7 +162,7 @@ public class TrainerServiceImplTest {
 
         // Act & Assert
         assertThrows(AuthenticationException.class, () -> {
-            trainerServiceImpl.updateTrainer(request, trainerId, "Joel.Miller", "wrongPassword");
+            trainerServiceImpl.updateTrainer(request, "Joel.Miller", "wrongPassword");
         });
 
         verify(trainerDao, never()).update(any(Trainer.class), any(Integer.class));
@@ -167,15 +177,15 @@ public class TrainerServiceImplTest {
         trainer.setLastName("Smith");
         trainer.setUsername("john.smith");
 
-        TrainerDto trainerDto = new TrainerDto();
-        trainerDto.setFirstName("John");
-        trainerDto.setLastName("Smith");
+        TrainerSummaryDto trainerSummaryDto = new TrainerSummaryDto();
+        trainerSummaryDto.setFirstName("John");
+        trainerSummaryDto.setLastName("Smith");
 
         when(trainerDao.findById(trainerId)).thenReturn(Optional.of(trainer));
-        when(trainerMapper.toDto(trainer)).thenReturn(trainerDto);
+        when(trainerMapper.toDto(trainer)).thenReturn(trainerSummaryDto);
 
         // Act
-        Optional<TrainerDto> result = trainerServiceImpl.selectTrainer(trainerId);
+        Optional<TrainerSummaryDto> result = trainerServiceImpl.selectTrainer(trainerId);
 
         // Assert
         assertTrue(result.isPresent());
@@ -192,15 +202,17 @@ public class TrainerServiceImplTest {
         trainer.setLastName("Desanta");
         trainer.setUsername("Michael.Desanta");
 
-        TrainerDto trainerDto = new TrainerDto();
-        trainerDto.setFirstName("Michael");
-        trainerDto.setLastName("Desanta");
+        com.epam_final_project.dto.trainer.response.TrainerProfileDto trainerProfileDto = new com.epam_final_project.dto.trainer.response.TrainerProfileDto();
+        trainerProfileDto.setFirstName("Michael");
+        trainerProfileDto.setLastName("Desanta");
+        trainerProfileDto.setSpecialization("Yoga");
+        trainerProfileDto.setActive(true);
 
         when(trainerDao.findByUsername(trainer.getUsername())).thenReturn(Optional.of(trainer));
-        when(trainerMapper.toDto(trainer)).thenReturn(trainerDto);
+        when(trainerMapper.toTrainerProfileDto(trainer)).thenReturn(trainerProfileDto);
 
         // Act
-        Optional<TrainerDto> foundTrainer = trainerServiceImpl.selectTrainerByUsername(trainer.getUsername());
+        Optional<com.epam_final_project.dto.trainer.response.TrainerProfileDto> foundTrainer = trainerServiceImpl.selectTrainerByUsername(trainer.getUsername());
 
         // Assert
         assertFalse(foundTrainer.isEmpty());
@@ -216,6 +228,8 @@ public class TrainerServiceImplTest {
         request.setLastName("Smith");
         request.setSpecialization("Yoga");
 
+        doNothing().when(usernameConflictChecker).checkUsernameConflict(any(), any(), anyBoolean());
+
         // Act & Assert
         assertThrows(IllegalArgumentException.class, () -> {
             trainerServiceImpl.createTrainer(request);
@@ -229,6 +243,8 @@ public class TrainerServiceImplTest {
         request.setFirstName("");
         request.setLastName("Smith");
         request.setSpecialization("Yoga");
+
+        doNothing().when(usernameConflictChecker).checkUsernameConflict(any(), any(), anyBoolean());
 
         // Act & Assert
         assertThrows(IllegalArgumentException.class, () -> {
@@ -244,6 +260,8 @@ public class TrainerServiceImplTest {
         request.setLastName(null);
         request.setSpecialization("Yoga");
 
+        doNothing().when(usernameConflictChecker).checkUsernameConflict(any(), any(), anyBoolean());
+
         // Act & Assert
         assertThrows(IllegalArgumentException.class, () -> {
             trainerServiceImpl.createTrainer(request);
@@ -257,6 +275,8 @@ public class TrainerServiceImplTest {
         request.setFirstName("John");
         request.setLastName("");
         request.setSpecialization("Yoga");
+
+        doNothing().when(usernameConflictChecker).checkUsernameConflict(any(), any(), anyBoolean());
 
         // Act & Assert
         assertThrows(IllegalArgumentException.class, () -> {
@@ -358,7 +378,7 @@ public class TrainerServiceImplTest {
                 .thenReturn(expectedTrainings);
 
         // Act
-        List<TrainingDto> result = trainerServiceImpl.getTrainingsByUsernameAndCriteria(
+        List<TrainerTrainingResponseDto> result = trainerServiceImpl.getTrainingsByUsernameAndCriteria(
                 trainerUsername,
                 fromDate,
                 toDate,
@@ -380,19 +400,29 @@ public class TrainerServiceImplTest {
         List<Trainer> expectedTrainers = new ArrayList<>();
         expectedTrainers.add(new Trainer());
 
-        TrainerDto trainerDto = new TrainerDto();
-        trainerDto.setFirstName("Trainer");
-        trainerDto.setLastName("One");
+        TrainerSummaryDto trainerSummaryDto = new TrainerSummaryDto();
+        trainerSummaryDto.setFirstName("Trainer");
+        trainerSummaryDto.setLastName("One");
 
         when(trainerDao.findTrainersNotAssignedOnTraineeByTraineeUsername(username))
                 .thenReturn(expectedTrainers);
-        when(trainerMapper.toDto(any(Trainer.class))).thenReturn(trainerDto);
+        when(trainerMapper.toDto(any(Trainer.class))).thenReturn(trainerSummaryDto);
 
         // Act
-        List<TrainerDto> result = trainerServiceImpl.getTrainersNotAssignedOnTraineeByTraineeUsername(username);
+        List<TrainerSummaryDto> result = trainerServiceImpl.getTrainersNotAssignedOnTraineeByTraineeUsername(username);
 
         // Assert
         assertEquals(expectedTrainers.size(), result.size());
         verify(trainerDao).findTrainersNotAssignedOnTraineeByTraineeUsername(username);
+    }
+
+    private void setId(User user, Integer id) {
+        try {
+            Field field = User.class.getDeclaredField("id");
+            field.setAccessible(true);
+            field.set(user, id);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

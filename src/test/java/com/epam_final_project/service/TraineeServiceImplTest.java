@@ -3,12 +3,18 @@ package com.epam_final_project.service;
 import com.epam_final_project.dao.TraineeDao;
 import com.epam_final_project.dao.TrainerDao;
 import com.epam_final_project.domain.Trainee;
-import com.epam_final_project.dto.CreateTraineeRequest;
-import com.epam_final_project.dto.TraineeDto;
-import com.epam_final_project.dto.TrainingDto;
+import com.epam_final_project.domain.Training;
+import com.epam_final_project.domain.User;
+import com.epam_final_project.dto.trainee.request.CreateTraineeRequest;
+import com.epam_final_project.dto.trainee.response.TraineeProfileDto;
+import com.epam_final_project.dto.training.response.TraineeTrainingResponseDto;
+import com.epam_final_project.dto.trainee.request.UpdateTraineeProfileRequestDto;
 import com.epam_final_project.mapper.TraineeMapper;
+import com.epam_final_project.mapper.TrainerMapper;
 import com.epam_final_project.mapper.TrainingMapper;
 import com.epam_final_project.service.impl.TraineeServiceImpl;
+import com.epam_final_project.util.UsernameConflictChecker;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -16,17 +22,21 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import javax.naming.AuthenticationException;
+import java.lang.reflect.Field;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import com.epam_final_project.domain.Training;
+import static org.mockito.Mockito.doNothing;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyBoolean;
+import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.argThat;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.never;
@@ -43,6 +53,12 @@ public class TraineeServiceImplTest {
     private TraineeMapper traineeMapper;
     @Mock
     private TrainingMapper trainingMapper;
+    @Mock
+    private TrainerMapper trainerMapper;
+    @Mock
+    private UsernameConflictChecker usernameConflictChecker;
+    @Mock
+    private EntityManager entityManager;
 
     @InjectMocks
     private TraineeServiceImpl traineeServiceImpl;
@@ -63,6 +79,7 @@ public class TraineeServiceImplTest {
         trainee.setAddress("Test Address");
 
         when(traineeMapper.toEntity(request)).thenReturn(trainee);
+        doNothing().when(usernameConflictChecker).checkUsernameConflict(any(), any(), anyBoolean());
 
         // Act
         traineeServiceImpl.createTrainee(request);
@@ -87,6 +104,7 @@ public class TraineeServiceImplTest {
         trainee.setAddress("Test Address");
 
         when(traineeMapper.toEntity(request)).thenReturn(trainee);
+        doNothing().when(usernameConflictChecker).checkUsernameConflict(any(), any(), anyBoolean());
 
         // Act
         traineeServiceImpl.createTrainee(request);
@@ -100,9 +118,7 @@ public class TraineeServiceImplTest {
     @Test
     public void updateTrainee_shouldThrowException_whenCredentialsAreInvalid() throws AuthenticationException {
         // Arrange
-        Integer traineeId = 1;
-
-        CreateTraineeRequest updated = new CreateTraineeRequest();
+        UpdateTraineeProfileRequestDto updated = new UpdateTraineeProfileRequestDto();
         updated.setFirstName("John");
         updated.setLastName("Smith");
         updated.setDateOfBirth(LocalDate.of(2000, 1, 1));
@@ -117,7 +133,6 @@ public class TraineeServiceImplTest {
         assertThrows(AuthenticationException.class, () -> {
             traineeServiceImpl.updateTrainee(
                     updated,
-                    traineeId,
                     "bla.bla",
                     "blabla"
             );
@@ -129,29 +144,31 @@ public class TraineeServiceImplTest {
     @Test
     public void updateTrainee_shouldCallDaoUpdate_whenCredentialsAreValid() throws AuthenticationException {
         // Arrange
-        Integer traineeId = 1;
-
         when(authService.checkTraineeUsernameAndPassword(
                 "john.smith",
                 "password123"))
                 .thenReturn(true);
 
-        CreateTraineeRequest request = new CreateTraineeRequest();
+        UpdateTraineeProfileRequestDto request = new UpdateTraineeProfileRequestDto();
         request.setFirstName("John");
         request.setLastName("Smith");
         request.setDateOfBirth(LocalDate.of(2000, 1, 1));
         request.setAddress("Test Address");
+        request.setIsActive(true);
 
         Trainee trainee = new Trainee();
+        setId(trainee, 1);
         trainee.setFirstName("John");
         trainee.setLastName("Smith");
         trainee.setDateOfBirth(LocalDate.of(2000, 1, 1));
         trainee.setAddress("Test Address");
+        trainee.setUsername("john.smith");
+        trainee.setTrainers(new ArrayList<>());
 
-        when(traineeMapper.toEntity(request)).thenReturn(trainee);
+        when(traineeDao.findByUsername("john.smith")).thenReturn(Optional.of(trainee));
 
         // Act
-        traineeServiceImpl.updateTrainee(request, traineeId, "john.smith", "password123");
+        traineeServiceImpl.updateTrainee(request, "john.smith", "password123");
 
         // Assert
         verify(traineeDao).update(any(Trainee.class), any(Integer.class));
@@ -200,15 +217,15 @@ public class TraineeServiceImplTest {
         trainee.setLastName("Smith");
         Integer traineeId = 867;
 
-        TraineeDto traineeDto = new TraineeDto();
-        traineeDto.setFirstName("John");
-        traineeDto.setLastName("Smith");
+        TraineeProfileDto traineeProfileDto = new TraineeProfileDto();
+        traineeProfileDto.setFirstName("John");
+        traineeProfileDto.setLastName("Smith");
 
         when(traineeDao.findById(traineeId)).thenReturn(Optional.of(trainee));
-        when(traineeMapper.toDto(trainee)).thenReturn(traineeDto);
+        when(traineeMapper.toDto(trainee)).thenReturn(traineeProfileDto);
 
         // Act
-        Optional<TraineeDto> result = traineeServiceImpl.selectTrainee(traineeId);
+        Optional<TraineeProfileDto> result = traineeServiceImpl.selectTrainee(traineeId);
 
         // Assert
         assertNotNull(result.get().getFirstName());
@@ -220,15 +237,15 @@ public class TraineeServiceImplTest {
         // Arrange
         Trainee trainee = getTrainee();
 
-        TraineeDto traineeDto = new TraineeDto();
-        traineeDto.setFirstName("John");
-        traineeDto.setLastName("Smith");
+        TraineeProfileDto traineeProfileDto = new TraineeProfileDto();
+        traineeProfileDto.setFirstName("John");
+        traineeProfileDto.setLastName("Smith");
 
         when(traineeDao.findByUsername(trainee.getUsername())).thenReturn(Optional.of(trainee));
-        when(traineeMapper.toDto(trainee)).thenReturn(traineeDto);
+        when(traineeMapper.toDto(trainee)).thenReturn(traineeProfileDto);
 
         // Act
-        Optional<TraineeDto> foundTrainee = traineeServiceImpl.selectTraineeByUsername(trainee.getUsername());
+        Optional<TraineeProfileDto> foundTrainee = traineeServiceImpl.selectTraineeByUsername(trainee.getUsername());
 
         // Assert
         assertFalse(foundTrainee.isEmpty());
@@ -357,6 +374,7 @@ public class TraineeServiceImplTest {
         trainee.setAddress("Test Address");
 
         when(traineeMapper.toEntity(request)).thenReturn(trainee);
+        doNothing().when(usernameConflictChecker).checkUsernameConflict(any(), any(), anyBoolean());
 
         // Act & Assert
         assertThrows(IllegalArgumentException.class, () -> {
@@ -380,6 +398,7 @@ public class TraineeServiceImplTest {
         trainee.setAddress("Test Address");
 
         when(traineeMapper.toEntity(request)).thenReturn(trainee);
+        doNothing().when(usernameConflictChecker).checkUsernameConflict(any(), any(), anyBoolean());
 
         // Act & Assert
         assertThrows(IllegalArgumentException.class, () -> {
@@ -403,6 +422,7 @@ public class TraineeServiceImplTest {
         trainee.setAddress("Test Address");
 
         when(traineeMapper.toEntity(request)).thenReturn(trainee);
+        doNothing().when(usernameConflictChecker).checkUsernameConflict(any(), any(), anyBoolean());
 
         // Act & Assert
         assertThrows(IllegalArgumentException.class, () -> {
@@ -426,6 +446,7 @@ public class TraineeServiceImplTest {
         trainee.setAddress("Test Address");
 
         when(traineeMapper.toEntity(request)).thenReturn(trainee);
+        doNothing().when(usernameConflictChecker).checkUsernameConflict(any(), any(), anyBoolean());
 
         // Act & Assert
         assertThrows(IllegalArgumentException.class, () -> {
@@ -495,7 +516,7 @@ public class TraineeServiceImplTest {
                 .thenReturn(expectedTrainings);
 
         // Act
-        List<TrainingDto> result = traineeServiceImpl.getTrainingsByUsernameAndCriteria(
+        List<TraineeTrainingResponseDto> result = traineeServiceImpl.getTrainingsByUsernameAndCriteria(
                 username,
                 fromDate,
                 toDate,
@@ -522,6 +543,11 @@ public class TraineeServiceImplTest {
 
         when(authService.checkTraineeUsernameAndPassword(username, password)).thenReturn(true);
 
+        Trainee trainee = getTrainee();
+        when(traineeDao.findByUsername(traineeUsername)).thenReturn(Optional.of(trainee));
+        doNothing().when(entityManager).flush();
+        doNothing().when(entityManager).refresh(trainee);
+
         // Act
         traineeServiceImpl.updateTraineeTrainers(traineeUsername, trainerUsernames, username, password);
 
@@ -539,5 +565,15 @@ public class TraineeServiceImplTest {
         trainee.setDateOfBirth(LocalDate.of(2005, 12, 3));
         trainee.setAddress("Rustaveli N12");
         return trainee;
+    }
+
+    private void setId(User user, Integer id) {
+        try {
+            Field field = User.class.getDeclaredField("id");
+            field.setAccessible(true);
+            field.set(user, id);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

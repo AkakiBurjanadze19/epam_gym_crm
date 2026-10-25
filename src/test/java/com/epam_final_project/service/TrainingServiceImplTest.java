@@ -6,7 +6,7 @@ import com.epam_final_project.dao.TrainingDao;
 import com.epam_final_project.domain.Training;
 import com.epam_final_project.domain.Trainer;
 import com.epam_final_project.domain.Trainee;
-import com.epam_final_project.dto.CreateTrainingRequest;
+import com.epam_final_project.dto.training.request.CreateTrainingRequestDto;
 import com.epam_final_project.dto.TrainingDto;
 import com.epam_final_project.mapper.TrainingMapper;
 import com.epam_final_project.service.impl.TrainingServiceImpl;
@@ -43,12 +43,12 @@ public class TrainingServiceImplTest {
     @Test
     public void createTraining_shouldCallDaoCreate() {
         // Arrange
-        CreateTrainingRequest request = new CreateTrainingRequest();
+        CreateTrainingRequestDto request = new CreateTrainingRequestDto();
         request.setTraineeUsername("john.smith");
         request.setTrainerUsername("trainer.jane");
-        request.setName("Practicing Strength");
-        request.setDate(LocalDate.of(2026, 11, 5));
-        request.setDuration(1);
+        request.setTrainingName("Practicing Strength");
+        request.setTrainingDate(LocalDate.of(2026, 11, 5));
+        request.setTrainingDuration(1);
 
         Trainee trainee = new Trainee();
         Trainer trainer = new Trainer();
@@ -95,12 +95,12 @@ public class TrainingServiceImplTest {
     @Test
     public void createTraining_shouldThrowExceptionWhenNameIsNull() {
         // Arrange
-        CreateTrainingRequest request = new CreateTrainingRequest();
+        CreateTrainingRequestDto request = new CreateTrainingRequestDto();
         request.setTraineeUsername("john.smith");
         request.setTrainerUsername("trainer.jane");
-        request.setName(null);
-        request.setDate(LocalDate.of(2026, 11, 5));
-        request.setDuration(1);
+        request.setTrainingName(null);
+        request.setTrainingDate(LocalDate.of(2026, 11, 5));
+        request.setTrainingDuration(1);
 
         Trainee trainee = new Trainee();
         Trainer trainer = new Trainer();
@@ -119,12 +119,12 @@ public class TrainingServiceImplTest {
     @Test
     public void createTraining_shouldThrowExceptionWhenNameIsEmpty() {
         // Arrange
-        CreateTrainingRequest request = new CreateTrainingRequest();
+        CreateTrainingRequestDto request = new CreateTrainingRequestDto();
         request.setTraineeUsername("john.smith");
         request.setTrainerUsername("trainer.jane");
-        request.setName("");
-        request.setDate(LocalDate.of(2026, 11, 5));
-        request.setDuration(1);
+        request.setTrainingName("");
+        request.setTrainingDate(LocalDate.of(2026, 11, 5));
+        request.setTrainingDuration(1);
 
         Trainee trainee = new Trainee();
         Trainer trainer = new Trainer();
@@ -143,12 +143,12 @@ public class TrainingServiceImplTest {
     @Test
     public void createTraining_shouldThrowExceptionWhenDateIsNull() {
         // Arrange
-        CreateTrainingRequest request = new CreateTrainingRequest();
+        CreateTrainingRequestDto request = new CreateTrainingRequestDto();
         request.setTraineeUsername("john.smith");
         request.setTrainerUsername("trainer.jane");
-        request.setName("Valid Training");
-        request.setDate(null);
-        request.setDuration(1);
+        request.setTrainingName("Valid Training");
+        request.setTrainingDate(null);
+        request.setTrainingDuration(1);
 
         Trainee trainee = new Trainee();
         Trainer trainer = new Trainer();
@@ -167,12 +167,12 @@ public class TrainingServiceImplTest {
     @Test
     public void createTraining_shouldThrowExceptionWhenDurationIsZero() {
         // Arrange
-        CreateTrainingRequest request = new CreateTrainingRequest();
+        CreateTrainingRequestDto request = new CreateTrainingRequestDto();
         request.setTraineeUsername("john.smith");
         request.setTrainerUsername("trainer.jane");
-        request.setName("Valid Training");
-        request.setDate(LocalDate.of(2026, 11, 5));
-        request.setDuration(0);
+        request.setTrainingName("Valid Training");
+        request.setTrainingDate(LocalDate.of(2026, 11, 5));
+        request.setTrainingDuration(0);
 
         Trainee trainee = new Trainee();
         Trainer trainer = new Trainer();
@@ -191,12 +191,12 @@ public class TrainingServiceImplTest {
     @Test
     public void createTraining_shouldThrowExceptionWhenDurationIsNegative() {
         // Arrange
-        CreateTrainingRequest request = new CreateTrainingRequest();
+        CreateTrainingRequestDto request = new CreateTrainingRequestDto();
         request.setTraineeUsername("john.smith");
         request.setTrainerUsername("trainer.jane");
-        request.setName("Valid Training");
-        request.setDate(LocalDate.of(2026, 11, 5));
-        request.setDuration(-1);
+        request.setTrainingName("Valid Training");
+        request.setTrainingDate(LocalDate.of(2026, 11, 5));
+        request.setTrainingDuration(-1);
 
         Trainee trainee = new Trainee();
         Trainer trainer = new Trainer();

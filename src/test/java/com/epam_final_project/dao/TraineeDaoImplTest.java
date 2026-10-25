@@ -216,7 +216,6 @@ public class TraineeDaoImplTest {
         Training training = getTraining();
 
         trainer.addTrainee(trainee);
-        trainee.addTrainer(trainer);
         trainer.addTraining(training);
 
         // Act
