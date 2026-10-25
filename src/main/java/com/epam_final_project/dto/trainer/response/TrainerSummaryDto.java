@@ -1,11 +1,11 @@
-package com.epam_final_project.dto;
+package com.epam_final_project.dto.trainer.response;
 
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class TrainerDto {
+public class TrainerSummaryDto {
     private String username;
     private String firstName;
     private String lastName;

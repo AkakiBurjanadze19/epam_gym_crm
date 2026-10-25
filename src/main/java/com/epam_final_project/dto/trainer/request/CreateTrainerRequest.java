@@ -1,4 +1,4 @@
-package com.epam_final_project.dto;
+package com.epam_final_project.dto.trainer.request;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;

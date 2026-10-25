@@ -10,7 +10,7 @@ import java.time.LocalDate;
 
 @Getter
 @Setter
-public class CreateTrainingRequest {
+public class CreateTrainingRequestDto {
     @NotBlank(message = "Trainee username is required")
     private String traineeUsername;
 

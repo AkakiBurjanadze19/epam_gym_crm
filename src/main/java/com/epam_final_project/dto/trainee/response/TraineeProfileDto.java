@@ -1,5 +1,6 @@
-package com.epam_final_project.dto;
+package com.epam_final_project.dto.trainee.response;
 
+import com.epam_final_project.dto.trainer.response.TrainerSummaryDto;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -14,5 +15,5 @@ public class TraineeProfileDto {
     private LocalDate dateOfBirth;
     private String address;
     private boolean isActive;
-    private List<TrainerDto> trainers;
+    private List<TrainerSummaryDto> trainers;
 }
