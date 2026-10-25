@@ -1,6 +1,8 @@
 package com.epam_final_project.util;
 
+import java.util.HashSet;
 import java.util.Random;
+import java.util.Set;
 
 import com.epam_final_project.dao.TraineeDao;
 import com.epam_final_project.dao.TrainerDao;
@@ -20,9 +22,13 @@ public class UsernameAndPasswordGenerator {
     ) {
         String base = firstName + "." + lastName;
 
+        Set<String> existingUsernames = new HashSet<>();
+        existingUsernames.addAll(traineeDao.findUsernamesStartingWith(base));
+        existingUsernames.addAll(trainerDao.findUsernamesStartingWith(base));
+
         String username = base;
         int suffix = 1;
-        while (traineeDao.existsByUsername(username) || trainerDao.existsByUsername(username)) {
+        while (existingUsernames.contains(username)) {
             username = base + (suffix++);
         }
 
