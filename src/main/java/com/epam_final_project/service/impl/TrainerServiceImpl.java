@@ -3,17 +3,23 @@ package com.epam_final_project.service.impl;
 import com.epam_final_project.dao.TraineeDao;
 import com.epam_final_project.dao.TrainerDao;
 import com.epam_final_project.dao.TrainingTypeDao;
-import com.epam_final_project.domain.Trainee;
 import com.epam_final_project.domain.Trainer;
 import com.epam_final_project.domain.TrainingType;
-import com.epam_final_project.dto.CreateTrainerRequest;
-import com.epam_final_project.dto.TrainerDto;
-import com.epam_final_project.dto.TrainingDto;
+import com.epam_final_project.dto.common.TraineeSummaryDto;
+import com.epam_final_project.dto.trainer.request.CreateTrainerRequest;
+import com.epam_final_project.dto.trainer.request.UpdateTrainerProfileRequestDto;
+import com.epam_final_project.dto.trainer.response.TrainerProfileDto;
+import com.epam_final_project.dto.trainer.response.TrainerSummaryDto;
+import com.epam_final_project.dto.trainer.response.TrainerRegistrationResponseDto;
+import com.epam_final_project.dto.trainer.response.UpdateTrainerProfileResponseDto;
+import com.epam_final_project.dto.training.response.TrainerTrainingResponseDto;
+import com.epam_final_project.mapper.TraineeMapper;
 import com.epam_final_project.mapper.TrainerMapper;
 import com.epam_final_project.mapper.TrainingMapper;
 import com.epam_final_project.service.AuthService;
 import com.epam_final_project.service.TrainerService;
 import com.epam_final_project.util.UsernameAndPasswordGenerator;
+import com.epam_final_project.util.UsernameConflictChecker;
 import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,8 +27,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.naming.AuthenticationException;
+import jakarta.persistence.EntityNotFoundException;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -35,6 +41,8 @@ public class TrainerServiceImpl implements TrainerService {
     private AuthService authService;
     private TrainerMapper trainerMapper;
     private TrainingMapper trainingMapper;
+    private TraineeMapper traineeMapper;
+    private UsernameConflictChecker usernameConflictChecker;
 
     @Autowired
     public void setTrainerDao(TrainerDao trainerDao) {
@@ -57,6 +65,11 @@ public class TrainerServiceImpl implements TrainerService {
     }
 
     @Autowired
+    public void setTraineeMapper(TraineeMapper traineeMapper) {
+        this.traineeMapper = traineeMapper;
+    }
+
+    @Autowired
     public void setTrainingMapper(TrainingMapper trainingMapper) {
         this.trainingMapper = trainingMapper;
     }
@@ -66,17 +79,21 @@ public class TrainerServiceImpl implements TrainerService {
         this.trainingTypeDao = trainingTypeDao;
     }
 
+    @Autowired
+    public void setUsernameConflictChecker(UsernameConflictChecker usernameConflictChecker) {
+        this.usernameConflictChecker = usernameConflictChecker;
+    }
+
     @Override
     @Transactional
-    public void createTrainer(CreateTrainerRequest request) {
+    public TrainerRegistrationResponseDto createTrainer(CreateTrainerRequest request) {
         log.info("creating trainer: {}", request);
+
+        checkIfUsernameExistsAsTrainee(request);
 
         Trainer trainer = trainerMapper.toEntity(request);
 
-        TrainingType specialization = trainingTypeDao
-                .findByTrainingTypeName(request.getSpecialization())
-                .orElseThrow(() -> new IllegalArgumentException("Invalid specialization: " +
-                        request.getSpecialization()));
+        TrainingType specialization = getTrainingType(request);
         trainer.setSpecialization(specialization);
 
         validateTrainer(trainer);
@@ -84,6 +101,29 @@ public class TrainerServiceImpl implements TrainerService {
         generateUsernameAndPassword(trainer);
 
         trainerDao.create(trainer);
+
+        return new TrainerRegistrationResponseDto(trainer.getUsername(), trainer.getPassword());
+    }
+
+    private TrainingType getTrainingType(CreateTrainerRequest request) {
+        String specializationName = request.getSpecialization();
+        if (specializationName == null || specializationName.isBlank()) {
+            throw new IllegalArgumentException("Specialization must not be null or empty");
+        }
+
+        TrainingType specialization = trainingTypeDao
+                .findByTrainingTypeName(specializationName)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid specialization: " +
+                        specializationName));
+        return specialization;
+    }
+
+    private void checkIfUsernameExistsAsTrainee(CreateTrainerRequest request) {
+        usernameConflictChecker.checkUsernameConflict(
+                request.getFirstName(),
+                request.getLastName(),
+                true
+        );
     }
 
     private void generateUsernameAndPassword(Trainer trainer) {
@@ -113,25 +153,59 @@ public class TrainerServiceImpl implements TrainerService {
 
     @Override
     @Transactional
-    public void updateTrainer(
-            CreateTrainerRequest request,
-            Integer trainerId,
+    public UpdateTrainerProfileResponseDto updateTrainer(
+            UpdateTrainerProfileRequestDto request,
             String username,
             String password
     ) throws AuthenticationException {
-        log.info("updating trainer with id {} with updated trainer: {}", trainerId, request);
+        log.info("updating trainer with username {} with updated trainer: {}", username, request);
         if (!authService.checkTrainerUsernameAndPassword(username, password)) {
             throw new AuthenticationException("invalid credentials");
         }
 
-        Trainer updatedTrainer = trainerMapper.toEntity(request);
+        Optional<Trainer> foundTrainer = trainerDao.findByUsername(username);
+        if (foundTrainer.isEmpty()) {
+            throw new EntityNotFoundException("Trainer not found: " + username);
+        }
 
-        trainerDao.update(updatedTrainer, trainerId);
+        Trainer trainer = foundTrainer.get();
+        trainer.setFirstName(request.getFirstName());
+        trainer.setLastName(request.getLastName());
+        trainer.setActive(request.getIsActive());
+
+        trainerDao.update(trainer, trainer.getId());
+
+        List<TraineeSummaryDto> trainees = getTraineeSummaryDtos(trainer);
+
+        return getUpdateTrainerProfileResponseDto(trainer, trainees);
+    }
+
+    private UpdateTrainerProfileResponseDto getUpdateTrainerProfileResponseDto(
+            Trainer updatedTrainer,
+            List<TraineeSummaryDto> trainees
+    ) {
+        return new UpdateTrainerProfileResponseDto(
+                updatedTrainer.getUsername(),
+                updatedTrainer.getFirstName(),
+                updatedTrainer.getLastName(),
+                updatedTrainer.getSpecialization() != null ? updatedTrainer.getSpecialization().getTrainingTypeName() : null,
+                updatedTrainer.isActive(),
+                trainees
+        );
+    }
+
+    private List<TraineeSummaryDto> getTraineeSummaryDtos(Trainer updatedTrainer) {
+        List<TraineeSummaryDto> trainees = updatedTrainer
+                .getTrainees()
+                .stream()
+                .map(traineeMapper::toSummaryDto)
+                .toList();
+        return trainees;
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<TrainerDto> selectTrainer(Integer trainerId) {
+    public Optional<TrainerSummaryDto> selectTrainer(Integer trainerId) {
         log.info("selecting trainer with id {}", trainerId);
         return trainerDao
                 .findById(trainerId)
@@ -139,10 +213,10 @@ public class TrainerServiceImpl implements TrainerService {
     }
 
     @Override
-    public Optional<TrainerDto> selectTrainerByUsername(String username) {
+    public Optional<TrainerProfileDto> selectTrainerByUsername(String username) {
         return trainerDao
                 .findByUsername(username)
-                .map(trainerMapper::toDto);
+                .map(trainerMapper::toTrainerProfileDto);
     }
 
     @Override
@@ -167,18 +241,14 @@ public class TrainerServiceImpl implements TrainerService {
     @Override
     @Transactional
     public void activateTrainer(Integer trainerId, String username, String password)
-            throws AuthenticationException{
+            throws AuthenticationException {
         if (!authService.checkTrainerUsernameAndPassword(username, password)) {
-            throw new AuthenticationException("invalid credentials");
+            throw new AuthenticationException("invalid credentials provided");
         }
 
         Optional<Trainer> foundTrainer = trainerDao.findById(trainerId);
 
         foundTrainer.ifPresent(trainer -> {
-            if (trainer.isActive()) {
-                throw new IllegalStateException("Trainer is already active");
-            }
-
             trainer.setActive(true);
         });
     }
@@ -194,17 +264,30 @@ public class TrainerServiceImpl implements TrainerService {
         Optional<Trainer> foundTrainer = trainerDao.findById(trainerId);
 
         foundTrainer.ifPresent(trainer -> {
-            if (!trainer.isActive()) {
-                throw new IllegalStateException("Trainer is already not active");
-            }
-
             trainer.setActive(false);
         });
     }
 
     @Override
+    @Transactional
+    public void activateDeactivateTrainer(String username, boolean isActive, String authUsername, String authPassword)
+            throws AuthenticationException {
+        if (!authService.checkTrainerUsernameAndPassword(authUsername, authPassword)) {
+            throw new AuthenticationException("invalid credentials");
+        }
+
+        Optional<Trainer> foundTrainer = trainerDao.findByUsername(username);
+        if (foundTrainer.isEmpty()) {
+            throw new EntityNotFoundException("Trainer not found: " + username);
+        }
+
+        Trainer trainer = foundTrainer.get();
+        trainer.setActive(isActive);
+    }
+
+    @Override
     @Transactional(readOnly = true)
-    public List<TrainingDto> getTrainingsByUsernameAndCriteria(
+    public List<TrainerTrainingResponseDto> getTrainingsByUsernameAndCriteria(
             String trainerUsername,
             LocalDate fromDate,
             LocalDate toDate,
@@ -213,12 +296,13 @@ public class TrainerServiceImpl implements TrainerService {
         return trainerDao.findTrainingsByUsernameAndCriteria(
                 trainerUsername, fromDate, toDate, traineeName)
                 .stream()
-                .map(trainingMapper::toDto).toList();
+                .map(trainingMapper::toTrainerTrainingResponseDto)
+                .toList();
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<TrainerDto> getTrainersNotAssignedOnTraineeByTraineeUsername(String username) {
+    public List<TrainerSummaryDto> getTrainersNotAssignedOnTraineeByTraineeUsername(String username) {
         return trainerDao
                 .findTrainersNotAssignedOnTraineeByTraineeUsername(username)
                 .stream()

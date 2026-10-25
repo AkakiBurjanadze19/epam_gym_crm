@@ -6,8 +6,7 @@ import com.epam_final_project.dao.TrainingDao;
 import com.epam_final_project.domain.Trainee;
 import com.epam_final_project.domain.Trainer;
 import com.epam_final_project.domain.Training;
-import com.epam_final_project.dto.CreateTraineeRequest;
-import com.epam_final_project.dto.CreateTrainingRequest;
+import com.epam_final_project.dto.training.request.CreateTrainingRequestDto;
 import com.epam_final_project.dto.TrainingDto;
 import com.epam_final_project.mapper.TrainingMapper;
 import com.epam_final_project.service.TrainingService;
@@ -50,18 +49,16 @@ public class TrainingServiceImpl implements TrainingService {
 
     @Override
     @Transactional
-    public void createTraining(CreateTrainingRequest request) {
-        Trainee trainee = traineeDao
-                .findByUsername(request.getTraineeUsername())
-                .orElseThrow(() -> new EntityNotFoundException("Trainee not found"));
+    public void createTraining(CreateTrainingRequestDto request) {
+        Trainee trainee = getTrainee(request);
 
-        Trainer trainer = trainerDao
-                .findByUsername(request.getTrainerUsername())
-                .orElseThrow(() -> new EntityNotFoundException("Trainer not found"));
+        Trainer trainer = getTrainer(request);
 
         Training training = trainingMapper.toEntity(request);
         training.setTrainee(trainee);
         training.setTrainer(trainer);
+
+        handleUnassignedSpecialization(trainer);
         training.setType(trainer.getSpecialization());
 
         validateTraining(training);
@@ -69,7 +66,27 @@ public class TrainingServiceImpl implements TrainingService {
         trainingDao.create(training);
     }
 
-    private static void validateTraining(Training training) {
+    private Trainee getTrainee(CreateTrainingRequestDto request) {
+        Trainee trainee = traineeDao
+                .findByUsername(request.getTraineeUsername())
+                .orElseThrow(() -> new EntityNotFoundException("Trainee not found"));
+        return trainee;
+    }
+
+    private Trainer getTrainer(CreateTrainingRequestDto request) {
+        Trainer trainer = trainerDao
+                .findByUsername(request.getTrainerUsername())
+                .orElseThrow(() -> new EntityNotFoundException("Trainer not found"));
+        return trainer;
+    }
+
+    private void handleUnassignedSpecialization(Trainer trainer) {
+        if (trainer.getSpecialization() == null) {
+            throw new IllegalArgumentException("Trainer must have a specialization assigned");
+        }
+    }
+
+    private void validateTraining(Training training) {
         if (training.getName() == null || training.getName().isEmpty()) {
             throw new IllegalArgumentException("training name must not be null or empty");
         }

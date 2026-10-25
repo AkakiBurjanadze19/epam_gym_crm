@@ -3,17 +3,20 @@ package com.epam_final_project.service.impl;
 import com.epam_final_project.dao.TraineeDao;
 import com.epam_final_project.dao.TrainerDao;
 import com.epam_final_project.domain.Trainee;
-import com.epam_final_project.domain.Trainer;
-import com.epam_final_project.domain.Training;
-import com.epam_final_project.dto.CreateTraineeRequest;
-import com.epam_final_project.dto.TraineeDto;
-import com.epam_final_project.dto.TrainingDto;
+import com.epam_final_project.dto.trainee.request.CreateTraineeRequest;
+import com.epam_final_project.dto.trainee.request.UpdateTraineeProfileRequestDto;
+import com.epam_final_project.dto.trainee.response.TraineeProfileDto;
+import com.epam_final_project.dto.trainee.response.UpdateTraineeProfileResponseDto;
+import com.epam_final_project.dto.trainee.response.TraineeRegistrationResponseDto;
+import com.epam_final_project.dto.trainer.response.TrainerSummaryDto;
+import com.epam_final_project.dto.training.response.TraineeTrainingResponseDto;
 import com.epam_final_project.mapper.TraineeMapper;
 import com.epam_final_project.mapper.TrainerMapper;
 import com.epam_final_project.mapper.TrainingMapper;
 import com.epam_final_project.service.AuthService;
 import com.epam_final_project.service.TraineeService;
 import com.epam_final_project.util.UsernameAndPasswordGenerator;
+import com.epam_final_project.util.UsernameConflictChecker;
 import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,8 +24,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.naming.AuthenticationException;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityNotFoundException;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,7 +37,10 @@ public class TraineeServiceImpl implements TraineeService {
     private TrainerDao trainerDao;
     private AuthService authService;
     private TraineeMapper traineeMapper;
+    private TrainerMapper trainerMapper;
     private TrainingMapper trainingMapper;
+    private UsernameConflictChecker usernameConflictChecker;
+    private EntityManager em;
 
     @Autowired
     public void setTraineeDao(TraineeDao traineeDao) {
@@ -56,14 +63,31 @@ public class TraineeServiceImpl implements TraineeService {
     }
 
     @Autowired
+    public void setTrainerMapper(TrainerMapper trainerMapper) {
+        this.trainerMapper = trainerMapper;
+    }
+
+    @Autowired
     public void setTrainingMapper(TrainingMapper trainingMapper) {
         this.trainingMapper = trainingMapper;
     }
 
+    @Autowired
+    public void setUsernameConflictChecker(UsernameConflictChecker usernameConflictChecker) {
+        this.usernameConflictChecker = usernameConflictChecker;
+    }
+
+    @Autowired
+    public void setEntityManager(EntityManager em) {
+        this.em = em;
+    }
+
     @Override
     @Transactional
-    public void createTrainee(CreateTraineeRequest request) {
+    public TraineeRegistrationResponseDto createTrainee(CreateTraineeRequest request) {
         log.info("creating trainee: {}", request);
+
+        checkIfUsernameExistsAsTrainer(request);
 
         Trainee trainee = traineeMapper.toEntity(request);
 
@@ -72,6 +96,16 @@ public class TraineeServiceImpl implements TraineeService {
         generateUsernameAndPassword(trainee);
 
         traineeDao.create(trainee);
+
+        return new TraineeRegistrationResponseDto(trainee.getUsername(), trainee.getPassword());
+    }
+
+    private void checkIfUsernameExistsAsTrainer(CreateTraineeRequest request) {
+        usernameConflictChecker.checkUsernameConflict(
+                request.getFirstName(),
+                request.getLastName(),
+                false
+        );
     }
 
     private void generateUsernameAndPassword(Trainee trainee) {
@@ -101,20 +135,65 @@ public class TraineeServiceImpl implements TraineeService {
 
     @Override
     @Transactional
-    public void updateTrainee(
-            CreateTraineeRequest request,
-            Integer traineeId,
+    public UpdateTraineeProfileResponseDto updateTrainee(
+            UpdateTraineeProfileRequestDto request,
             String username,
             String password
     ) throws AuthenticationException {
-        log.info("updating trainee with id {} with updated trainee: {}", traineeId, request);
+        log.info("updating trainee with username {} with updated trainee: {}", username, request);
         if (!authService.checkTraineeUsernameAndPassword(username, password)) {
             throw new AuthenticationException("invalid credentials provided");
         }
 
-        Trainee updatedTrainee = traineeMapper.toEntity(request);
+        Optional<Trainee> foundTrainee = traineeDao.findByUsername(username);
+        if (foundTrainee.isEmpty()) {
+            throw new EntityNotFoundException("Trainee not found: " + username);
+        }
 
-        traineeDao.update(updatedTrainee, traineeId);
+        Trainee trainee = getUpdatedTrainee(request, foundTrainee);
+
+        traineeDao.update(trainee, trainee.getId());
+
+        List<TrainerSummaryDto> trainerSummaryDtos = getTrainerSummaryDtos(trainee);
+
+        return getUpdateTraineeProfileResponseDto(trainee, trainerSummaryDtos);
+    }
+
+    private UpdateTraineeProfileResponseDto getUpdateTraineeProfileResponseDto(
+            Trainee trainee,
+            List<TrainerSummaryDto> trainerSummaryDtos
+    ) {
+        return new UpdateTraineeProfileResponseDto(
+                trainee.getUsername(),
+                trainee.getFirstName(),
+                trainee.getLastName(),
+                trainee.getDateOfBirth(),
+                trainee.getAddress(),
+                trainee.isActive(),
+                trainerSummaryDtos
+        );
+    }
+
+    private List<TrainerSummaryDto> getTrainerSummaryDtos(Trainee trainee) {
+        List<TrainerSummaryDto> trainerSummaryDtos = trainee
+                .getTrainers()
+                .stream()
+                .map(trainerMapper::toDto)
+                .toList();
+        return trainerSummaryDtos;
+    }
+
+    private Trainee getUpdatedTrainee(
+            UpdateTraineeProfileRequestDto request,
+            Optional<Trainee> foundTrainee
+    ) {
+        Trainee trainee = foundTrainee.get();
+        trainee.setFirstName(request.getFirstName());
+        trainee.setLastName(request.getLastName());
+        trainee.setDateOfBirth(request.getDateOfBirth());
+        trainee.setAddress(request.getAddress());
+        trainee.setActive(request.getIsActive());
+        return trainee;
     }
 
     @Override
@@ -131,7 +210,7 @@ public class TraineeServiceImpl implements TraineeService {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<TraineeDto> selectTrainee(Integer traineeId) {
+    public Optional<TraineeProfileDto> selectTrainee(Integer traineeId) {
         log.info("selecting trainee with id {}", traineeId);
         return traineeDao
                 .findById(traineeId)
@@ -140,7 +219,7 @@ public class TraineeServiceImpl implements TraineeService {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<TraineeDto> selectTraineeByUsername(String username) {
+    public Optional<TraineeProfileDto> selectTraineeByUsername(String username) {
         return traineeDao
                 .findByUsername(username)
                 .map(traineeMapper::toDto);
@@ -176,10 +255,6 @@ public class TraineeServiceImpl implements TraineeService {
         Optional<Trainee> foundTrainee = traineeDao.findById(traineeId);
 
         foundTrainee.ifPresent(trainee -> {
-            if (trainee.isActive()) {
-                throw new IllegalStateException("Trainee is already active");
-            }
-
             trainee.setActive(true);
         });
     }
@@ -195,12 +270,29 @@ public class TraineeServiceImpl implements TraineeService {
         Optional<Trainee> foundTrainee = traineeDao.findById(traineeId);
 
         foundTrainee.ifPresent(trainee -> {
-            if (!trainee.isActive()) {
-                throw new IllegalStateException("Trainee is already not active");
-            }
-
             trainee.setActive(false);
         });
+    }
+
+    @Override
+    @Transactional
+    public void activateDeactivateTrainee(
+            String username,
+            boolean isActive,
+            String authUsername,
+            String authPassword
+    ) throws AuthenticationException {
+        if (!authService.checkTraineeUsernameAndPassword(authUsername, authPassword)) {
+            throw new AuthenticationException("invalid credentials provided");
+        }
+
+        Optional<Trainee> foundTrainee = traineeDao.findByUsername(username);
+        if (foundTrainee.isEmpty()) {
+            throw new EntityNotFoundException("Trainee not found: " + username);
+        }
+
+        Trainee trainee = foundTrainee.get();
+        trainee.setActive(isActive);
     }
 
     @Override
@@ -216,7 +308,7 @@ public class TraineeServiceImpl implements TraineeService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<TrainingDto> getTrainingsByUsernameAndCriteria(
+    public List<TraineeTrainingResponseDto> getTrainingsByUsernameAndCriteria(
             String username,
             LocalDate fromDate,
             LocalDate toDate,
@@ -231,13 +323,13 @@ public class TraineeServiceImpl implements TraineeService {
                         trainerName,
                         trainingTypeName
         ).stream()
-                .map(trainingMapper::toDto)
+                .map(trainingMapper::toTraineeTrainingResponseDto)
                 .toList();
     }
 
     @Override
     @Transactional
-    public void updateTraineeTrainers(
+    public List<TrainerSummaryDto> updateTraineeTrainers(
             String traineeUsername,
             List<String> updatedTrainerUsernames,
             String username,
@@ -248,5 +340,17 @@ public class TraineeServiceImpl implements TraineeService {
         }
 
         traineeDao.updateTrainers(traineeUsername, updatedTrainerUsernames);
+
+        em.flush();
+        Optional<Trainee> foundTrainee = traineeDao.findByUsername(traineeUsername);
+        if (foundTrainee.isEmpty()) {
+            throw new EntityNotFoundException("Trainee not found: " + traineeUsername);
+        }
+
+        em.refresh(foundTrainee.get());
+
+        List<TrainerSummaryDto> trainerDtos = getTrainerSummaryDtos(foundTrainee.get());
+
+        return trainerDtos;
     }
 }
