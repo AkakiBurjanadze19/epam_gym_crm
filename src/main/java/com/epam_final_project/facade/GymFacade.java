@@ -2,6 +2,17 @@ package com.epam_final_project.facade;
 
 import com.epam_final_project.domain.TrainingType;
 import com.epam_final_project.dto.*;
+import com.epam_final_project.dto.trainee.request.CreateTraineeRequest;
+import com.epam_final_project.dto.trainee.request.UpdateTraineeProfileRequestDto;
+import com.epam_final_project.dto.trainee.response.TraineeProfileDto;
+import com.epam_final_project.dto.trainer.request.CreateTrainerRequest;
+import com.epam_final_project.dto.trainer.request.UpdateTrainerProfileRequestDto;
+import com.epam_final_project.dto.trainer.response.TrainerProfileDto;
+import com.epam_final_project.dto.trainer.response.TrainerSummaryDto;
+import com.epam_final_project.dto.training.request.CreateTrainingRequestDto;
+import com.epam_final_project.dto.training.response.TraineeTrainingResponseDto;
+import com.epam_final_project.dto.training.response.TrainerTrainingResponseDto;
+import com.epam_final_project.dto.trainingtype.response.TrainingTypeResponseDto;
 import com.epam_final_project.service.TraineeService;
 import com.epam_final_project.service.TrainerService;
 import com.epam_final_project.service.TrainingService;
@@ -43,14 +54,13 @@ public class GymFacade {
     }
 
     public void updateTrainee(
-            CreateTraineeRequest request,
-            Integer traineeId,
+            UpdateTraineeProfileRequestDto request,
             String username,
             String password
     ) throws AuthenticationException {
-        log.info("Updating trainee with ID: {} with data: {}", traineeId, request);
-        traineeService.updateTrainee(request, traineeId, username, password);
-        log.info("Trainee with ID: {} updated successfully", traineeId);
+        log.info("Updating trainee with username: {} with data: {}", username, request);
+        traineeService.updateTrainee(request, username, password);
+        log.info("Trainee with username: {} updated successfully", username);
     }
 
     public void deleteTrainee(Integer traineeId, String username, String password)
@@ -60,9 +70,9 @@ public class GymFacade {
         log.info("Trainee with ID: {} deleted successfully", traineeId);
     }
 
-    public Optional<TraineeDto> selectTrainee(Integer traineeId) {
+    public Optional<TraineeProfileDto> selectTrainee(Integer traineeId) {
         log.info("Selecting trainee with ID: {}", traineeId);
-        Optional<TraineeDto> trainee = traineeService.selectTrainee(traineeId);
+        Optional<TraineeProfileDto> trainee = traineeService.selectTrainee(traineeId);
         if (trainee.isPresent()) {
             log.info("Trainee found with ID: {}", traineeId);
         } else {
@@ -71,7 +81,7 @@ public class GymFacade {
         return trainee;
     }
 
-    public Optional<TraineeDto> selectTraineeByUsername(String username) {
+    public Optional<TraineeProfileDto> selectTraineeByUsername(String username) {
         log.info("selecting trainee with username: {}", username);
         return traineeService.selectTraineeByUsername(username);
     }
@@ -103,13 +113,23 @@ public class GymFacade {
         traineeService.deActivateTrainee(traineeId, username, password);
     }
 
+    public void activateDeactivateTrainee(
+            String username,
+            boolean isActive,
+            String authUsername,
+            String authPassword
+    ) throws AuthenticationException {
+        log.info("activate/deactivate trainee with username: {}", username);
+        traineeService.activateDeactivateTrainee(username, isActive, authUsername, authPassword);
+    }
+
     public void deleteTraineeByUsername(String traineeUsername, String username, String password)
             throws AuthenticationException {
-        log.info("deleting trainee with username: {}", username);
+        log.info("deleting trainee with username: {}", traineeUsername);
         traineeService.deleteTraineeByUsername(traineeUsername, username, password);
     }
 
-    public List<TrainingDto> getTrainingsByUsernameAndCriteria(
+    public List<TraineeTrainingResponseDto> getTrainingsByUsernameAndCriteria(
             String username,
             LocalDate fromDate,
             LocalDate toDate,
@@ -146,19 +166,18 @@ public class GymFacade {
     }
 
     public void updateTrainer(
-            CreateTrainerRequest request,
-            Integer trainerId,
+            UpdateTrainerProfileRequestDto request,
             String username,
             String password
     ) throws AuthenticationException {
-        log.info("Updating trainer with ID: {} with data: {}", trainerId, request);
-        trainerService.updateTrainer(request, trainerId, username, password);
-        log.info("Trainer with ID: {} updated successfully", trainerId);
+        log.info("Updating trainer with username: {} with data: {}", username, request);
+        trainerService.updateTrainer(request, username, password);
+        log.info("Trainer with username: {} updated successfully", username);
     }
 
-    public Optional<TrainerDto> selectTrainer(Integer trainerId) {
+    public Optional<TrainerSummaryDto> selectTrainer(Integer trainerId) {
         log.info("Selecting trainer with ID: {}", trainerId);
-        Optional<TrainerDto> trainer = trainerService.selectTrainer(trainerId);
+        Optional<TrainerSummaryDto> trainer = trainerService.selectTrainer(trainerId);
         if (trainer.isPresent()) {
             log.info("Trainer found with ID: {}", trainerId);
         } else {
@@ -167,7 +186,7 @@ public class GymFacade {
         return trainer;
     }
 
-    public Optional<TrainerDto> selectTrainerByUsername(String username) {
+    public Optional<TrainerProfileDto> selectTrainerByUsername(String username) {
         log.info("selecting trainer with username: {}", username);
         return trainerService.selectTrainerByUsername(username);
     }
@@ -194,7 +213,17 @@ public class GymFacade {
         trainerService.deActivateTrainer(trainerId, username, password);
     }
 
-    public List<TrainingDto> getTrainingsByUsernameAndCriteria(
+    public void activateDeactivateTrainer(
+            String username,
+            boolean isActive,
+            String authUsername,
+            String authPassword
+    ) throws AuthenticationException {
+        log.info("activate/deactivate trainer with username: {}", username);
+        trainerService.activateDeactivateTrainer(username, isActive, authUsername, authPassword);
+    }
+
+    public List<TrainerTrainingResponseDto> getTrainingsByUsernameAndCriteria(
             String trainerUsername,
             LocalDate fromDate,
             LocalDate toDate,
@@ -208,12 +237,12 @@ public class GymFacade {
         );
     }
 
-    public List<TrainerDto> getTrainersNotAssignedOnTraineeByTraineeUsername(String username) {
+    public List<TrainerSummaryDto> getTrainersNotAssignedOnTraineeByTraineeUsername(String username) {
         return trainerService.getTrainersNotAssignedOnTraineeByTraineeUsername(username);
     }
 
     /* Training Operations */
-    public void createTraining(CreateTrainingRequest request) {
+    public void createTraining(CreateTrainingRequestDto request) {
         log.info("Creating training: {}", request);
         trainingService.createTraining(request);
     }
@@ -234,7 +263,7 @@ public class GymFacade {
         return trainingTypeService.selectTrainingType(trainingTypeId);
     }
 
-    public List<TrainingType> getAllTrainingTypes() {
+    public List<TrainingTypeResponseDto> getAllTrainingTypes() {
         return trainingTypeService.getAllTrainingTypes();
     }
 }
