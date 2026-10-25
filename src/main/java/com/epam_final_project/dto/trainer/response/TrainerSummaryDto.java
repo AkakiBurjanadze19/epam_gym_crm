@@ -6,9 +6,8 @@ import lombok.Setter;
 @Getter
 @Setter
 public class TrainerDto {
+    private String username;
     private String firstName;
     private String lastName;
-    private String username;
-    private boolean isActive;
     private String specialization;
 }
