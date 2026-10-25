@@ -5,6 +5,4 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @ComponentScan(basePackages = "com.epam_final_project")
-public class AppConfig {
-    public AppConfig() {}
-}
+public class AppConfig {}

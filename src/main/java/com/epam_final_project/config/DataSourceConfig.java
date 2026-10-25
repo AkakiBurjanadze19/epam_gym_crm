@@ -72,14 +72,30 @@ public class DataSourceConfig {
 
     @Bean
     public DataSourceInitializer dataSourceInitializer(DataSource dataSource) {
-        ResourceDatabasePopulator resourceDatabasePopulator = new ResourceDatabasePopulator();
-        resourceDatabasePopulator.addScript(new ClassPathResource("schema.sql"));
-        resourceDatabasePopulator.addScript(new ClassPathResource("data.sql"));
+        ResourceDatabasePopulator schemaPopulator = new ResourceDatabasePopulator();
+        schemaPopulator.addScript(new ClassPathResource("schema.sql"));
+        schemaPopulator.execute(dataSource);
 
-        DataSourceInitializer dataSourceInitializer = new DataSourceInitializer();
-        dataSourceInitializer.setDataSource(dataSource);
-        dataSourceInitializer.setDatabasePopulator(resourceDatabasePopulator);
-        return dataSourceInitializer;
+        DataSourceInitializer initializer = new DataSourceInitializer();
+        initializer.setDataSource(dataSource);
+
+        ResourceDatabasePopulator dataPopulator = new ResourceDatabasePopulator();
+        dataPopulator.addScript(new ClassPathResource("data.sql"));
+
+        initializer.setDatabasePopulator(connection -> {
+            try (var statement = connection.createStatement();
+                 var resultSet = statement.executeQuery(
+                         "SELECT EXISTS (SELECT 1 FROM training_types)"
+                 )) {
+                resultSet.next();
+
+                if (!resultSet.getBoolean(1)) {
+                    dataPopulator.populate(connection);
+                }
+            }
+        });
+
+        return initializer;
     }
 
     @Bean
