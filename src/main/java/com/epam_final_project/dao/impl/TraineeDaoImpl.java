@@ -80,9 +80,14 @@ public class TraineeDaoImpl implements TraineeDao {
 
     @Override
     public void deleteByUsername(String username) {
-        Optional<Trainee> foundTrainee = findByUsername(username);
+        String jpql = "DELETE FROM Trainee t WHERE t.username = :username";
+        int deleted = em.createQuery(jpql)
+                .setParameter("username", username)
+                .executeUpdate();
 
-        foundTrainee.ifPresent(t -> em.remove(t));
+        if (deleted == 0) {
+            log.warn("No trainee found with username: {}", username);
+        }
     }
 
     @Override
@@ -132,7 +137,7 @@ public class TraineeDaoImpl implements TraineeDao {
             Expression<String> firstName = cb.lower(trainer.get("firstName"));
             Expression<String> lastName = cb.lower(trainer.get("lastName"));
             Expression<String> fullName = cb.concat(
-                    cb.concat(firstName, ""),
+                    cb.concat(firstName, " "),
                     lastName
             );
 
@@ -185,8 +190,9 @@ public class TraineeDaoImpl implements TraineeDao {
                 .setParameter("usernames", updatedTrainerUsernames)
                 .getResultList();
 
-        if (trainers.size() != updatedTrainerUsernames.stream().distinct().count()) {
-            throw new EntityNotFoundException("One or more trainer were not found");
+        long distinctRequested = updatedTrainerUsernames.stream().distinct().count();
+        if (trainers.size() != distinctRequested) {
+            throw new EntityNotFoundException("One or more trainers were not found");
         }
 
         trainee.getTrainers().clear();
@@ -201,5 +207,13 @@ public class TraineeDaoImpl implements TraineeDao {
                 .setParameter("username", username);
 
         return query.getSingleResult();
+    }
+
+    @Override
+    public List<String> findUsernamesStartingWith(String prefix) {
+        String jpql = "SELECT t.username FROM Trainee t WHERE t.username LIKE :prefix";
+        TypedQuery<String> query = em.createQuery(jpql, String.class)
+                .setParameter("prefix", prefix + "%");
+        return query.getResultList();
     }
 }

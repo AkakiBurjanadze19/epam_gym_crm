@@ -24,4 +24,5 @@ public interface TraineeDao {
     );
     void updateTrainers(String traineeUsername, List<String> updatedTrainerUsernames);
     boolean existsByUsername(String username);
+    List<String> findUsernamesStartingWith(String prefix);
 }

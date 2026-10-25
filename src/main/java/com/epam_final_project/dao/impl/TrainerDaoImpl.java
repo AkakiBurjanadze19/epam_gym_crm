@@ -110,7 +110,7 @@ public class TrainerDaoImpl implements TrainerDao {
             Expression<String> firstName = cb.lower(trainee.get("firstName"));
             Expression<String> lastName = cb.lower(trainee.get("lastName"));
             Expression<String> fullName = cb.concat(
-                    cb.concat(firstName, ""),
+                    cb.concat(firstName, " "),
                     lastName
             );
 
@@ -154,5 +154,13 @@ public class TrainerDaoImpl implements TrainerDao {
                 .setParameter("username", username);
 
         return query.getSingleResult();
+    }
+
+    @Override
+    public List<String> findUsernamesStartingWith(String prefix) {
+        String jpql = "SELECT t.username FROM Trainer t WHERE t.username LIKE :prefix";
+        TypedQuery<String> query = em.createQuery(jpql, String.class)
+                .setParameter("prefix", prefix + "%");
+        return query.getResultList();
     }
 }

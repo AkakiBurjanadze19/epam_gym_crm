@@ -21,4 +21,5 @@ public interface TrainerDao {
     );
     List<Trainer> findTrainersNotAssignedOnTraineeByTraineeUsername(String username);
     boolean existsByUsername(String username);
+    List<String> findUsernamesStartingWith(String prefix);
 }
