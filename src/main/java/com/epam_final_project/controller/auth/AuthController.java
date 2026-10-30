@@ -1,5 +1,6 @@
 package com.epam_final_project.controller.auth;
 
+import com.epam_final_project.dto.auth.request.ChangeLoginRequestDto;
 import com.epam_final_project.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -7,9 +8,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -54,17 +57,15 @@ public class AuthController {
             description = "Changes the password for a trainee or trainer. Requires current password for verification.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Password changed successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid request - missing parameters or invalid old password",
+            @ApiResponse(responseCode = "400", description = "Invalid request - missing parameters, validation failed, or invalid old password",
                     content = @Content(schema = @Schema(implementation = Void.class))),
             @ApiResponse(responseCode = "404", description = "User not found",
                     content = @Content(schema = @Schema(implementation = Void.class)))
     })
     public ResponseEntity<Void> changePassword(
-            @RequestParam("username") @NotBlank @Schema(description = "Username", example = "john.smith") String username,
-            @RequestParam("oldPassword") @NotBlank @Schema(description = "Current password", example = "secret123") String oldPassword,
-            @RequestParam("newPassword") @NotBlank @Schema(description = "New password", example = "newSecret456") String newPassword
+            @Valid @RequestBody ChangeLoginRequestDto request
     ) {
-        authService.changeLogin(username, oldPassword, newPassword);
+        authService.changeLogin(request.getUsername(), request.getOldPassword(), request.getNewPassword());
         return new ResponseEntity<>(HttpStatus.OK);
     }
 }
