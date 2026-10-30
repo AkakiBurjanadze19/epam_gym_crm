@@ -81,9 +81,10 @@ public class GymFacade {
         return trainee;
     }
 
-    public Optional<TraineeProfileDto> selectTraineeByUsername(String username) {
+    public Optional<TraineeProfileDto> selectTraineeByUsername(String username, String authUsername, String authPassword)
+            throws AuthenticationException {
         log.info("selecting trainee with username: {}", username);
-        return traineeService.selectTraineeByUsername(username);
+        return traineeService.selectTraineeByUsername(username, authUsername, authPassword);
     }
 
     public void changeTraineePassword(
@@ -134,14 +135,18 @@ public class GymFacade {
             LocalDate fromDate,
             LocalDate toDate,
             String trainerName,
-            String trainingTypeName
-    ) {
+            String trainingTypeName,
+            String authUsername,
+            String authPassword
+    ) throws AuthenticationException {
         return traineeService.getTrainingsByUsernameAndCriteria(
                 username,
                 fromDate,
                 toDate,
                 trainerName,
-                trainingTypeName
+                trainingTypeName,
+                authUsername,
+                authPassword
         );
     }
 
@@ -186,9 +191,10 @@ public class GymFacade {
         return trainer;
     }
 
-    public Optional<TrainerProfileDto> selectTrainerByUsername(String username) {
+    public Optional<TrainerProfileDto> selectTrainerByUsername(String username, String authUsername, String authPassword)
+            throws AuthenticationException {
         log.info("selecting trainer with username: {}", username);
-        return trainerService.selectTrainerByUsername(username);
+        return trainerService.selectTrainerByUsername(username, authUsername, authPassword);
     }
 
     public void changeTrainerPassword(
@@ -227,24 +233,33 @@ public class GymFacade {
             String trainerUsername,
             LocalDate fromDate,
             LocalDate toDate,
-            String traineeName
-    ) {
+            String traineeName,
+            String authUsername,
+            String authPassword
+    ) throws AuthenticationException {
         return trainerService.getTrainingsByUsernameAndCriteria(
                 trainerUsername,
                 fromDate,
                 toDate,
-                traineeName
+                traineeName,
+                authUsername,
+                authPassword
         );
     }
 
-    public List<TrainerSummaryDto> getTrainersNotAssignedOnTraineeByTraineeUsername(String username) {
-        return trainerService.getTrainersNotAssignedOnTraineeByTraineeUsername(username);
+    public List<TrainerSummaryDto> getTrainersNotAssignedOnTraineeByTraineeUsername(
+            String username,
+            String authUsername,
+            String authPassword
+    ) throws AuthenticationException {
+        return trainerService.getTrainersNotAssignedOnTraineeByTraineeUsername(username, authUsername, authPassword);
     }
 
     /* Training Operations */
-    public void createTraining(CreateTrainingRequestDto request) {
+    public void createTraining(CreateTrainingRequestDto request, String authUsername, String authPassword)
+            throws AuthenticationException {
         log.info("Creating training: {}", request);
-        trainingService.createTraining(request);
+        trainingService.createTraining(request, authUsername, authPassword);
     }
 
     public Optional<TrainingDto> selectTraining(Integer trainingId) {

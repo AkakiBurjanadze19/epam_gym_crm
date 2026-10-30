@@ -27,7 +27,8 @@ public interface TraineeService {
 
     Optional<TraineeProfileDto> selectTrainee(Integer traineeId);
 
-    Optional<TraineeProfileDto> selectTraineeByUsername(String username);
+    Optional<TraineeProfileDto> selectTraineeByUsername(String username, String authUsername, String authPassword)
+            throws AuthenticationException;
 
     void changeTraineePassword(String updatedPassword, Integer traineeId, String username, String password)
             throws AuthenticationException;
@@ -49,8 +50,10 @@ public interface TraineeService {
             LocalDate fromDate,
             LocalDate toDate,
             String trainerName,
-            String trainingTypeName
-    );
+            String trainingTypeName,
+            String authUsername,
+            String authPassword
+    ) throws AuthenticationException;
 
     List<TrainerSummaryDto> updateTraineeTrainers(
             String traineeUsername,

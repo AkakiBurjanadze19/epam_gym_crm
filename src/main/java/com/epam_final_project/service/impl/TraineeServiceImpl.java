@@ -219,7 +219,11 @@ public class TraineeServiceImpl implements TraineeService {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<TraineeProfileDto> selectTraineeByUsername(String username) {
+    public Optional<TraineeProfileDto> selectTraineeByUsername(String username, String authUsername, String authPassword)
+            throws AuthenticationException {
+        if (!authService.checkTraineeUsernameAndPassword(authUsername, authPassword)) {
+            throw new AuthenticationException("invalid credentials");
+        }
         return traineeDao
                 .findByUsername(username)
                 .map(traineeMapper::toDto);
@@ -313,8 +317,13 @@ public class TraineeServiceImpl implements TraineeService {
             LocalDate fromDate,
             LocalDate toDate,
             String trainerName,
-            String trainingTypeName
-    ) {
+            String trainingTypeName,
+            String authUsername,
+            String authPassword
+    ) throws AuthenticationException {
+        if (!authService.checkTraineeUsernameAndPassword(authUsername, authPassword)) {
+            throw new AuthenticationException("invalid credentials");
+        }
         return traineeDao
                 .findTrainingsByUsernameAndCriteria(
                         username,
@@ -322,7 +331,7 @@ public class TraineeServiceImpl implements TraineeService {
                         toDate,
                         trainerName,
                         trainingTypeName
-        ).stream()
+                ).stream()
                 .map(trainingMapper::toTraineeTrainingResponseDto)
                 .toList();
     }

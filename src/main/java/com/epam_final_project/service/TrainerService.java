@@ -24,7 +24,8 @@ public interface TrainerService {
 
     Optional<TrainerSummaryDto> selectTrainer(Integer trainerId);
 
-    Optional<TrainerProfileDto> selectTrainerByUsername(String username);
+    Optional<TrainerProfileDto> selectTrainerByUsername(String username, String authUsername, String authPassword)
+            throws AuthenticationException;
 
     void changeTrainerPassword(
             String updatedPassword,
@@ -46,8 +47,14 @@ public interface TrainerService {
             String trainerUsername,
             LocalDate fromDate,
             LocalDate toDate,
-            String traineeName
-    );
+            String traineeName,
+            String authUsername,
+            String authPassword
+    ) throws AuthenticationException;
 
-    List<TrainerSummaryDto> getTrainersNotAssignedOnTraineeByTraineeUsername(String username);
+    List<TrainerSummaryDto> getTrainersNotAssignedOnTraineeByTraineeUsername(
+            String username,
+            String authUsername,
+            String authPassword
+    ) throws AuthenticationException;
 }

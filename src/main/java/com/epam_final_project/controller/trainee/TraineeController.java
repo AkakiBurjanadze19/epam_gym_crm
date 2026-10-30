@@ -62,18 +62,24 @@ public class TraineeController {
 
     @GetMapping("/{username}")
     @Operation(summary = "Get trainee profile by username",
-            description = "Retrieves the full trainee profile including associated trainers list.")
+            description = "Retrieves the full trainee profile including associated trainers list. Requires authentication.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Trainee profile found",
                     content = @Content(schema = @Schema(implementation = TraineeProfileDto.class))),
+            @ApiResponse(responseCode = "401", description = "Invalid credentials",
+                    content = @Content(schema = @Schema(implementation = Void.class))),
             @ApiResponse(responseCode = "404", description = "Trainee not found",
                     content = @Content(schema = @Schema(implementation = Void.class)))
     })
     public ResponseEntity<TraineeProfileDto> getTraineeProfile(
             @Parameter(description = "Trainee username", example = "john.smith")
-            @PathVariable("username") String username
-    ) {
-        TraineeProfileDto response = traineeService.selectTraineeByUsername(username)
+            @PathVariable("username") String username,
+            @Parameter(description = "Authenticated username", example = "john.smith")
+            @RequestParam("username") @NotBlank String authUsername,
+            @Parameter(description = "Authenticated password", example = "secret123")
+            @RequestParam("password") @NotBlank String authPassword
+    ) throws AuthenticationException {
+        TraineeProfileDto response = traineeService.selectTraineeByUsername(username, authUsername, authPassword)
                 .orElseThrow(() -> new EntityNotFoundException("Trainee not found: " + username));
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -206,16 +212,22 @@ public class TraineeController {
 
     @GetMapping("/{username}/trainings")
     @Operation(summary = "Get trainee trainings with filters",
-            description = "Retrieves all trainings for a trainee with optional filtering by date range, trainer name, and training type.")
+            description = "Retrieves all trainings for a trainee with optional filtering by date range, trainer name, and training type. Requires authentication.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Trainings retrieved successfully",
                     content = @Content(schema = @Schema(implementation = TraineeTrainingResponseDto.class))),
+            @ApiResponse(responseCode = "401", description = "Invalid credentials",
+                    content = @Content(schema = @Schema(implementation = Void.class))),
             @ApiResponse(responseCode = "404", description = "Trainee not found",
                     content = @Content(schema = @Schema(implementation = Void.class)))
     })
     public ResponseEntity<List<TraineeTrainingResponseDto>> getTraineeTrainings(
             @Parameter(description = "Trainee username", example = "john.smith")
             @PathVariable("username") String username,
+            @Parameter(description = "Authenticated username", example = "john.smith")
+            @RequestParam("username") @NotBlank String authUsername,
+            @Parameter(description = "Authenticated password", example = "secret123")
+            @RequestParam("password") @NotBlank String authPassword,
             @Parameter(description = "Filter trainings from this date (inclusive)", example = "2024-01-01")
             @RequestParam(value = "period_from", required = false) LocalDate periodFrom,
             @Parameter(description = "Filter trainings to this date (inclusive)", example = "2024-12-31")
@@ -224,8 +236,8 @@ public class TraineeController {
             @RequestParam(value = "trainer_name", required = false) String trainerName,
             @Parameter(description = "Filter by training type name", example = "Strength Training")
             @RequestParam(value = "training_type", required = false) String trainingType
-    ) {
-        if (traineeService.selectTraineeByUsername(username).isEmpty()) {
+    ) throws AuthenticationException {
+        if (traineeService.selectTraineeByUsername(username, authUsername, authPassword).isEmpty()) {
             throw new EntityNotFoundException("Trainee not found: " + username);
         }
         List<TraineeTrainingResponseDto> response = traineeService.getTrainingsByUsernameAndCriteria(
@@ -233,7 +245,9 @@ public class TraineeController {
                 periodFrom,
                 periodTo,
                 trainerName,
-                trainingType
+                trainingType,
+                authUsername,
+                authPassword
         );
 
         return new ResponseEntity<>(response, HttpStatus.OK);

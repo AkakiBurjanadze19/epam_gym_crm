@@ -9,6 +9,7 @@ import com.epam_final_project.domain.Trainee;
 import com.epam_final_project.dto.training.request.CreateTrainingRequestDto;
 import com.epam_final_project.dto.TrainingDto;
 import com.epam_final_project.mapper.TrainingMapper;
+import com.epam_final_project.service.AuthService;
 import com.epam_final_project.service.impl.TrainingServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,6 +17,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import javax.naming.AuthenticationException;
 import java.time.LocalDate;
 import java.util.Optional;
 
@@ -36,12 +38,14 @@ public class TrainingServiceImplTest {
     private TrainerDao trainerDao;
     @Mock
     private TrainingMapper trainingMapper;
+    @Mock
+    private AuthService authService;
 
     @InjectMocks
     private TrainingServiceImpl trainingServiceImpl;
 
     @Test
-    public void createTraining_shouldCallDaoCreate() {
+    public void createTraining_shouldCallDaoCreate() throws AuthenticationException {
         // Arrange
         CreateTrainingRequestDto request = new CreateTrainingRequestDto();
         request.setTraineeUsername("john.smith");
@@ -59,12 +63,14 @@ public class TrainingServiceImplTest {
         training.setDate(LocalDate.of(2026, 11, 5));
         training.setDuration(1);
 
+        when(authService.checkTraineeUsernameAndPassword("john.smith", "password")).thenReturn(true);
+        when(authService.checkTrainerUsernameAndPassword("john.smith", "password")).thenReturn(true);
         when(traineeDao.findByUsername("john.smith")).thenReturn(Optional.of(trainee));
         when(trainerDao.findByUsername("trainer.jane")).thenReturn(Optional.of(trainer));
         when(trainingMapper.toEntity(request)).thenReturn(training);
 
         // Act
-        trainingServiceImpl.createTraining(request);
+        trainingServiceImpl.createTraining(request, "john.smith", "password");
 
         // Assert
         verify(trainingDao).create(any(Training.class));
@@ -93,7 +99,7 @@ public class TrainingServiceImplTest {
     }
 
     @Test
-    public void createTraining_shouldThrowExceptionWhenNameIsNull() {
+    public void createTraining_shouldThrowExceptionWhenNameIsNull() throws AuthenticationException {
         // Arrange
         CreateTrainingRequestDto request = new CreateTrainingRequestDto();
         request.setTraineeUsername("john.smith");
@@ -106,18 +112,20 @@ public class TrainingServiceImplTest {
         Trainer trainer = new Trainer();
         trainer.setSpecialization(new com.epam_final_project.domain.TrainingType());
 
+        when(authService.checkTraineeUsernameAndPassword("john.smith", "password")).thenReturn(true);
+        when(authService.checkTrainerUsernameAndPassword("john.smith", "password")).thenReturn(true);
         when(traineeDao.findByUsername("john.smith")).thenReturn(Optional.of(trainee));
         when(trainerDao.findByUsername("trainer.jane")).thenReturn(Optional.of(trainer));
         when(trainingMapper.toEntity(request)).thenReturn(new Training());
 
         // Act & Assert
         assertThrows(IllegalArgumentException.class, () -> {
-            trainingServiceImpl.createTraining(request);
+            trainingServiceImpl.createTraining(request, "john.smith", "password");
         });
     }
 
     @Test
-    public void createTraining_shouldThrowExceptionWhenNameIsEmpty() {
+    public void createTraining_shouldThrowExceptionWhenNameIsEmpty() throws AuthenticationException {
         // Arrange
         CreateTrainingRequestDto request = new CreateTrainingRequestDto();
         request.setTraineeUsername("john.smith");
@@ -130,18 +138,20 @@ public class TrainingServiceImplTest {
         Trainer trainer = new Trainer();
         trainer.setSpecialization(new com.epam_final_project.domain.TrainingType());
 
+        when(authService.checkTraineeUsernameAndPassword("john.smith", "password")).thenReturn(true);
+        when(authService.checkTrainerUsernameAndPassword("john.smith", "password")).thenReturn(true);
         when(traineeDao.findByUsername("john.smith")).thenReturn(Optional.of(trainee));
         when(trainerDao.findByUsername("trainer.jane")).thenReturn(Optional.of(trainer));
         when(trainingMapper.toEntity(request)).thenReturn(new Training());
 
         // Act & Assert
         assertThrows(IllegalArgumentException.class, () -> {
-            trainingServiceImpl.createTraining(request);
+            trainingServiceImpl.createTraining(request, "john.smith", "password");
         });
     }
 
     @Test
-    public void createTraining_shouldThrowExceptionWhenDateIsNull() {
+    public void createTraining_shouldThrowExceptionWhenDateIsNull() throws AuthenticationException {
         // Arrange
         CreateTrainingRequestDto request = new CreateTrainingRequestDto();
         request.setTraineeUsername("john.smith");
@@ -154,18 +164,20 @@ public class TrainingServiceImplTest {
         Trainer trainer = new Trainer();
         trainer.setSpecialization(new com.epam_final_project.domain.TrainingType());
 
+        when(authService.checkTraineeUsernameAndPassword("john.smith", "password")).thenReturn(true);
+        when(authService.checkTrainerUsernameAndPassword("john.smith", "password")).thenReturn(true);
         when(traineeDao.findByUsername("john.smith")).thenReturn(Optional.of(trainee));
         when(trainerDao.findByUsername("trainer.jane")).thenReturn(Optional.of(trainer));
         when(trainingMapper.toEntity(request)).thenReturn(new Training());
 
         // Act & Assert
         assertThrows(IllegalArgumentException.class, () -> {
-            trainingServiceImpl.createTraining(request);
+            trainingServiceImpl.createTraining(request, "john.smith", "password");
         });
     }
 
     @Test
-    public void createTraining_shouldThrowExceptionWhenDurationIsZero() {
+    public void createTraining_shouldThrowExceptionWhenDurationIsZero() throws AuthenticationException {
         // Arrange
         CreateTrainingRequestDto request = new CreateTrainingRequestDto();
         request.setTraineeUsername("john.smith");
@@ -178,18 +190,20 @@ public class TrainingServiceImplTest {
         Trainer trainer = new Trainer();
         trainer.setSpecialization(new com.epam_final_project.domain.TrainingType());
 
+        when(authService.checkTraineeUsernameAndPassword("john.smith", "password")).thenReturn(true);
+        when(authService.checkTrainerUsernameAndPassword("john.smith", "password")).thenReturn(true);
         when(traineeDao.findByUsername("john.smith")).thenReturn(Optional.of(trainee));
         when(trainerDao.findByUsername("trainer.jane")).thenReturn(Optional.of(trainer));
         when(trainingMapper.toEntity(request)).thenReturn(new Training());
 
         // Act & Assert
         assertThrows(IllegalArgumentException.class, () -> {
-            trainingServiceImpl.createTraining(request);
+            trainingServiceImpl.createTraining(request, "john.smith", "password");
         });
     }
 
     @Test
-    public void createTraining_shouldThrowExceptionWhenDurationIsNegative() {
+    public void createTraining_shouldThrowExceptionWhenDurationIsNegative() throws AuthenticationException {
         // Arrange
         CreateTrainingRequestDto request = new CreateTrainingRequestDto();
         request.setTraineeUsername("john.smith");
@@ -202,13 +216,15 @@ public class TrainingServiceImplTest {
         Trainer trainer = new Trainer();
         trainer.setSpecialization(new com.epam_final_project.domain.TrainingType());
 
+        when(authService.checkTraineeUsernameAndPassword("john.smith", "password")).thenReturn(true);
+        when(authService.checkTrainerUsernameAndPassword("john.smith", "password")).thenReturn(true);
         when(traineeDao.findByUsername("john.smith")).thenReturn(Optional.of(trainee));
         when(trainerDao.findByUsername("trainer.jane")).thenReturn(Optional.of(trainer));
         when(trainingMapper.toEntity(request)).thenReturn(new Training());
 
         // Act & Assert
         assertThrows(IllegalArgumentException.class, () -> {
-            trainingServiceImpl.createTraining(request);
+            trainingServiceImpl.createTraining(request, "john.smith", "password");
         });
     }
 }

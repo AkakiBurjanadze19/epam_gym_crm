@@ -154,7 +154,7 @@ public class GymFacadeTest {
     }
 
     @Test
-    public void createTraining_shouldDelegateToTrainingService() {
+    public void createTraining_shouldDelegateToTrainingService() throws AuthenticationException {
         // Arrange
         CreateTrainingRequestDto request = new CreateTrainingRequestDto();
         request.setTraineeUsername("john.smith");
@@ -164,10 +164,10 @@ public class GymFacadeTest {
         request.setTrainingDuration(60);
 
         // Act
-        gymFacade.createTraining(request);
+        gymFacade.createTraining(request, "john.smith", "password");
 
         // Assert
-        verify(trainingService).createTraining(request);
+        verify(trainingService).createTraining(request, "john.smith", "password");
     }
 
     @Test
@@ -231,13 +231,15 @@ public class GymFacadeTest {
     }
 
     @Test
-    public void getTrainingsByUsernameAndCriteria_shouldDelegateToTraineeService() {
+    public void getTrainingsByUsernameAndCriteria_shouldDelegateToTraineeService() throws AuthenticationException {
         // Arrange
         String username = "john.smith";
         LocalDate fromDate = LocalDate.of(2026, 1, 1);
         LocalDate toDate = LocalDate.of(2026, 12, 31);
         String trainerName = "trainer";
         String trainingTypeName = "strength";
+        String authUsername = "john.smith";
+        String authPassword = "password";
 
         List<TraineeTrainingResponseDto> expectedTrainings = new ArrayList<>();
         when(traineeService.getTrainingsByUsernameAndCriteria(
@@ -245,7 +247,9 @@ public class GymFacadeTest {
                 fromDate,
                 toDate,
                 trainerName,
-                trainingTypeName))
+                trainingTypeName,
+                authUsername,
+                authPassword))
                 .thenReturn(expectedTrainings);
 
         // Act
@@ -254,7 +258,9 @@ public class GymFacadeTest {
                 fromDate,
                 toDate,
                 trainerName,
-                trainingTypeName);
+                trainingTypeName,
+                authUsername,
+                authPassword);
 
         // Assert
         assertEquals(expectedTrainings, result);
@@ -263,7 +269,9 @@ public class GymFacadeTest {
                 fromDate,
                 toDate,
                 trainerName,
-                trainingTypeName);
+                trainingTypeName,
+                authUsername,
+                authPassword);
     }
 
     @Test
@@ -282,24 +290,26 @@ public class GymFacadeTest {
     }
 
     @Test
-    public void getTrainersNotAssignedOnTraineeByTraineeUsername_shouldDelegateToTrainerService() {
+    public void getTrainersNotAssignedOnTraineeByTraineeUsername_shouldDelegateToTrainerService() throws AuthenticationException {
         // Arrange
         String username = "john.smith";
+        String authUsername = "john.smith";
+        String authPassword = "password";
         List<TrainerSummaryDto> expectedTrainers = new ArrayList<>();
         TrainerSummaryDto trainerSummaryDto = new TrainerSummaryDto();
         trainerSummaryDto.setFirstName("Trainer");
         trainerSummaryDto.setLastName("One");
         expectedTrainers.add(trainerSummaryDto);
 
-        when(trainerService.getTrainersNotAssignedOnTraineeByTraineeUsername(username))
+        when(trainerService.getTrainersNotAssignedOnTraineeByTraineeUsername(username, authUsername, authPassword))
                 .thenReturn(expectedTrainers);
 
         // Act
-        List<TrainerSummaryDto> result = gymFacade.getTrainersNotAssignedOnTraineeByTraineeUsername(username);
+        List<TrainerSummaryDto> result = gymFacade.getTrainersNotAssignedOnTraineeByTraineeUsername(username, authUsername, authPassword);
 
         // Assert
         assertEquals(expectedTrainers, result);
-        verify(trainerService).getTrainersNotAssignedOnTraineeByTraineeUsername(username);
+        verify(trainerService).getTrainersNotAssignedOnTraineeByTraineeUsername(username, authUsername, authPassword);
     }
 
     @Test
@@ -346,19 +356,23 @@ public class GymFacadeTest {
     }
 
     @Test
-    public void getTrainingsByUsernameAndCriteria_shouldDelegateToTrainerService() {
+    public void getTrainingsByUsernameAndCriteria_shouldDelegateToTrainerService() throws AuthenticationException {
         // Arrange
         String username = "john.smith";
         LocalDate fromDate = LocalDate.of(2026, 1, 1);
         LocalDate toDate = LocalDate.of(2026, 12, 31);
         String traineeName = "trainee";
+        String authUsername = "john.smith";
+        String authPassword = "password";
 
         List<TrainerTrainingResponseDto> expectedTrainings = new ArrayList<>();
         when(trainerService.getTrainingsByUsernameAndCriteria(
                 username,
                 fromDate,
                 toDate,
-                traineeName)
+                traineeName,
+                authUsername,
+                authPassword)
         ).thenReturn(expectedTrainings);
 
         // Act
@@ -366,7 +380,9 @@ public class GymFacadeTest {
                 username,
                 fromDate,
                 toDate,
-                traineeName
+                traineeName,
+                authUsername,
+                authPassword
         );
 
         // Assert
@@ -375,7 +391,9 @@ public class GymFacadeTest {
                 username,
                 fromDate,
                 toDate,
-                traineeName
+                traineeName,
+                authUsername,
+                authPassword
         );
     }
 }

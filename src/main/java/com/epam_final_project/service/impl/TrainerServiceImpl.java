@@ -213,7 +213,11 @@ public class TrainerServiceImpl implements TrainerService {
     }
 
     @Override
-    public Optional<TrainerProfileDto> selectTrainerByUsername(String username) {
+    public Optional<TrainerProfileDto> selectTrainerByUsername(String username, String authUsername, String authPassword)
+            throws AuthenticationException {
+        if (!authService.checkTrainerUsernameAndPassword(authUsername, authPassword)) {
+            throw new AuthenticationException("invalid credentials");
+        }
         return trainerDao
                 .findByUsername(username)
                 .map(trainerMapper::toTrainerProfileDto);
@@ -291,8 +295,13 @@ public class TrainerServiceImpl implements TrainerService {
             String trainerUsername,
             LocalDate fromDate,
             LocalDate toDate,
-            String traineeName
-    ) {
+            String traineeName,
+            String authUsername,
+            String authPassword
+    ) throws AuthenticationException {
+        if (!authService.checkTrainerUsernameAndPassword(authUsername, authPassword)) {
+            throw new AuthenticationException("invalid credentials");
+        }
         return trainerDao.findTrainingsByUsernameAndCriteria(
                 trainerUsername, fromDate, toDate, traineeName)
                 .stream()
@@ -302,7 +311,14 @@ public class TrainerServiceImpl implements TrainerService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<TrainerSummaryDto> getTrainersNotAssignedOnTraineeByTraineeUsername(String username) {
+    public List<TrainerSummaryDto> getTrainersNotAssignedOnTraineeByTraineeUsername(
+            String username,
+            String authUsername,
+            String authPassword
+    ) throws AuthenticationException {
+        if (!authService.checkTraineeUsernameAndPassword(authUsername, authPassword)) {
+            throw new AuthenticationException("invalid credentials");
+        }
         return trainerDao
                 .findTrainersNotAssignedOnTraineeByTraineeUsername(username)
                 .stream()

@@ -112,9 +112,11 @@ public class TrainerControllerTest {
         trainerProfileDto.setSpecialization("Balance Training");
         trainerProfileDto.setActive(true);
 
-        when(trainerService.selectTrainerByUsername(username)).thenReturn(Optional.of(trainerProfileDto));
+        when(trainerService.selectTrainerByUsername(username, username, "secret")).thenReturn(Optional.of(trainerProfileDto));
 
-        mockMvc.perform(get("/api/trainers/{username}", username))
+        mockMvc.perform(get("/api/trainers/{username}", username)
+                .param("username", username)
+                .param("password", "secret"))
                 .andExpect(status().isOk());
     }
 
@@ -205,12 +207,15 @@ public class TrainerControllerTest {
                 "mary.trainee"
         );
 
-        when(trainerService.selectTrainerByUsername(username)).thenReturn(Optional.of(new TrainerProfileDto()));
+        when(trainerService.selectTrainerByUsername(username, username, "secret")).thenReturn(Optional.of(new TrainerProfileDto()));
         when(trainerService.getTrainingsByUsernameAndCriteria(
-                eq(username), any(), any(), any()
+                eq(username), any(), any(), any(),
+                eq(username), eq("secret")
         )).thenReturn(List.of(training1, training2));
 
         mockMvc.perform(get("/api/trainers/{username}/trainings", username)
+                        .param("username", username)
+                        .param("password", "secret")
                         .param("period_from", "2024-01-01")
                         .param("period_to", "2024-12-31")
                         .param("trainee_name", "john"))
@@ -236,11 +241,13 @@ public class TrainerControllerTest {
         trainer2.setLastName("Smith");
         trainer2.setSpecialization("Cardio");
 
-        when(traineeService.selectTraineeByUsername(username)).thenReturn(Optional.of(new com.epam_final_project.dto.trainee.response.TraineeProfileDto()));
-        when(trainerService.getTrainersNotAssignedOnTraineeByTraineeUsername(username))
+        when(traineeService.selectTraineeByUsername(username, username, "secret")).thenReturn(Optional.of(new com.epam_final_project.dto.trainee.response.TraineeProfileDto()));
+        when(trainerService.getTrainersNotAssignedOnTraineeByTraineeUsername(username, username, "secret"))
                 .thenReturn(List.of(trainer1, trainer2));
 
-        mockMvc.perform(get("/api/trainers/{username}/unassigned-trainers", username))
+        mockMvc.perform(get("/api/trainers/{username}/unassigned-trainers", username)
+                        .param("username", username)
+                        .param("password", "secret"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].username").value("jane.trainer"))
                 .andExpect(jsonPath("$[1].username").value("bob.trainer"));

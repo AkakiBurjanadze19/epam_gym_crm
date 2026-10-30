@@ -62,6 +62,8 @@ public class TrainingControllerTest {
         request.setTrainingDuration(60);
 
         mockMvc.perform(post("/api/trainings")
+                        .param("username", "john.smith")
+                        .param("password", "secret")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk());
@@ -86,12 +88,15 @@ public class TrainingControllerTest {
                 "bob.trainer"
         );
 
-        when(traineeService.selectTraineeByUsername(username)).thenReturn(Optional.of(new com.epam_final_project.dto.trainee.response.TraineeProfileDto()));
+        when(traineeService.selectTraineeByUsername(username, username, "secret")).thenReturn(Optional.of(new com.epam_final_project.dto.trainee.response.TraineeProfileDto()));
         when(traineeService.getTrainingsByUsernameAndCriteria(
-                username, null, null, null, null))
+                username, null, null, null, null,
+                username, "secret"))
                 .thenReturn(List.of(response1, response2));
 
-        mockMvc.perform(get("/api/trainings/trainee/{username}", username))
+        mockMvc.perform(get("/api/trainings/trainee/{username}", username)
+                        .param("username", username)
+                        .param("password", "secret"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].trainingName").value("Morning Cardio"))
                 .andExpect(jsonPath("$[0].trainerName").value("jane.trainer"))
@@ -118,12 +123,15 @@ public class TrainingControllerTest {
                 "mary.trainee"
         );
 
-        when(trainerService.selectTrainerByUsername(username)).thenReturn(Optional.of(new com.epam_final_project.dto.trainer.response.TrainerProfileDto()));
+        when(trainerService.selectTrainerByUsername(username, username, "secret")).thenReturn(Optional.of(new com.epam_final_project.dto.trainer.response.TrainerProfileDto()));
         when(trainerService.getTrainingsByUsernameAndCriteria(
-                username, null, null, null))
+                username, null, null, null,
+                username, "secret"))
                 .thenReturn(List.of(response1, response2));
 
-        mockMvc.perform(get("/api/trainings/trainer/{username}", username))
+        mockMvc.perform(get("/api/trainings/trainer/{username}", username)
+                        .param("username", username)
+                        .param("password", "secret"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].trainingName").value("Morning Cardio"))
                 .andExpect(jsonPath("$[0].traineeName").value("john.smith"))

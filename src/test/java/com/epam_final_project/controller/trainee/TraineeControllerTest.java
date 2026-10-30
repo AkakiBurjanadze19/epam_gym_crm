@@ -108,9 +108,11 @@ public class TraineeControllerTest {
 
         traineeProfileDto.setTrainers(List.of(trainerSummaryDto));
 
-        when(traineeService.selectTraineeByUsername("John.Smith")).thenReturn(Optional.of(traineeProfileDto));
+        when(traineeService.selectTraineeByUsername("John.Smith", "John.Smith", "secret")).thenReturn(Optional.of(traineeProfileDto));
 
-        mockMvc.perform(get("/api/trainees/John.Smith"))
+        mockMvc.perform(get("/api/trainees/John.Smith")
+                .param("username", "John.Smith")
+                .param("password", "secret"))
                 .andExpect(status().isOk());
     }
 
@@ -131,9 +133,11 @@ public class TraineeControllerTest {
 
         traineeProfileDto.setTrainers(List.of(trainerSummaryDto));
 
-        when(traineeService.selectTraineeByUsername("John.Smith")).thenReturn(Optional.of(traineeProfileDto));
+        when(traineeService.selectTraineeByUsername("John.Smith", "John.Smith", "secret")).thenReturn(Optional.of(traineeProfileDto));
 
-        mockMvc.perform(get("/api/trainees/John.Smith"))
+        mockMvc.perform(get("/api/trainees/John.Smith")
+                .param("username", "John.Smith")
+                .param("password", "secret"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.firstName").value("John"))
                 .andExpect(jsonPath("$.lastName").value("Smith"))
@@ -321,12 +325,15 @@ public class TraineeControllerTest {
                 "bob.trainer"
         );
 
-        when(traineeService.selectTraineeByUsername(username)).thenReturn(Optional.of(new TraineeProfileDto()));
+        when(traineeService.selectTraineeByUsername(username, username, "secret")).thenReturn(Optional.of(new TraineeProfileDto()));
         when(traineeService.getTrainingsByUsernameAndCriteria(
-                eq(username), any(), any(), any(), any()
+                eq(username), any(), any(), any(), any(),
+                eq(username), eq("secret")
         )).thenReturn(List.of(training1, training2));
 
         mockMvc.perform(get("/api/trainees/{username}/trainings", username)
+                        .param("username", username)
+                        .param("password", "secret")
                         .param("period_from", "2024-01-01")
                         .param("period_to", "2024-12-31")
                         .param("trainer_name", "jane")

@@ -231,7 +231,7 @@ public class TraineeServiceImplTest {
     }
 
     @Test
-    public void selectTraineeByUsername_shouldReturnDaoResult() {
+    public void selectTraineeByUsername_shouldReturnDaoResult() throws AuthenticationException {
         // Arrange
         Trainee trainee = getTrainee();
 
@@ -239,11 +239,12 @@ public class TraineeServiceImplTest {
         traineeProfileDto.setFirstName("John");
         traineeProfileDto.setLastName("Smith");
 
+        when(authService.checkTraineeUsernameAndPassword(trainee.getUsername(), trainee.getPassword())).thenReturn(true);
         when(traineeDao.findByUsername(trainee.getUsername())).thenReturn(Optional.of(trainee));
         when(traineeMapper.toDto(trainee)).thenReturn(traineeProfileDto);
 
         // Act
-        Optional<TraineeProfileDto> foundTrainee = traineeServiceImpl.selectTraineeByUsername(trainee.getUsername());
+        Optional<TraineeProfileDto> foundTrainee = traineeServiceImpl.selectTraineeByUsername(trainee.getUsername(), trainee.getUsername(), trainee.getPassword());
 
         // Assert
         assertFalse(foundTrainee.isEmpty());
@@ -496,15 +497,18 @@ public class TraineeServiceImplTest {
     }
 
     @Test
-    public void getTrainingsByUsernameAndCriteria_shouldCallDaoMethod() {
+    public void getTrainingsByUsernameAndCriteria_shouldCallDaoMethod() throws AuthenticationException {
         // Arrange
         String username = "john.smith";
         LocalDate fromDate = LocalDate.of(2026, 1, 1);
         LocalDate toDate = LocalDate.of(2026, 12, 31);
         String trainerName = "trainer";
         String trainingTypeName = "strength";
+        String authUsername = "john.smith";
+        String authPassword = "password123";
 
         List<Training> expectedTrainings = new ArrayList<>();
+        when(authService.checkTraineeUsernameAndPassword(authUsername, authPassword)).thenReturn(true);
         when(traineeDao.findTrainingsByUsernameAndCriteria(
                 username,
                 fromDate,
@@ -519,7 +523,9 @@ public class TraineeServiceImplTest {
                 fromDate,
                 toDate,
                 trainerName,
-                trainingTypeName);
+                trainingTypeName,
+                authUsername,
+                authPassword);
 
         // Assert
         assertEquals(expectedTrainings.size(), result.size());

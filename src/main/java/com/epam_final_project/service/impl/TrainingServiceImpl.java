@@ -9,6 +9,7 @@ import com.epam_final_project.domain.Training;
 import com.epam_final_project.dto.training.request.CreateTrainingRequestDto;
 import com.epam_final_project.dto.TrainingDto;
 import com.epam_final_project.mapper.TrainingMapper;
+import com.epam_final_project.service.AuthService;
 import com.epam_final_project.service.TrainingService;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
@@ -17,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.naming.AuthenticationException;
 import java.util.Optional;
 
 @Service
@@ -26,6 +28,7 @@ public class TrainingServiceImpl implements TrainingService {
     private TraineeDao traineeDao;
     private TrainerDao trainerDao;
     private TrainingMapper trainingMapper;
+    private AuthService authService;
 
     @Autowired
     public void setTrainingDao(TrainingDao trainingDao) {
@@ -47,9 +50,25 @@ public class TrainingServiceImpl implements TrainingService {
         this.trainingMapper = trainingMapper;
     }
 
+    @Autowired
+    public void setAuthService(AuthService authService) {
+        this.authService = authService;
+    }
+
     @Override
     @Transactional
-    public void createTraining(CreateTrainingRequestDto request) {
+    public void createTraining(CreateTrainingRequestDto request, String authUsername, String authPassword)
+            throws AuthenticationException {
+        // Validate credentials - either trainee or trainer must authenticate
+        boolean traineeValid = authService.checkTraineeUsernameAndPassword(authUsername, authPassword);
+        boolean trainerValid = authService.checkTrainerUsernameAndPassword(authUsername, authPassword);
+
+        if (!traineeValid && !trainerValid) {
+            throw new AuthenticationException("invalid credentials");
+        }
+
+        log.info("creating training for trainee: {}, trainer: {}", request.getTraineeUsername(), request.getTrainerUsername());
+
         Trainee trainee = getTrainee(request);
 
         Trainer trainer = getTrainer(request);

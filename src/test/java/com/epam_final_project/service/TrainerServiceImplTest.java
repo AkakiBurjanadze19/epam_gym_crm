@@ -193,12 +193,13 @@ public class TrainerServiceImplTest {
     }
 
     @Test
-    public void selectTrainerByUsername_shouldReturnDaoResult() {
+    public void selectTrainerByUsername_shouldReturnDaoResult() throws AuthenticationException {
         // Arrange
         Trainer trainer = new Trainer();
         trainer.setFirstName("Michael");
         trainer.setLastName("Desanta");
         trainer.setUsername("Michael.Desanta");
+        trainer.setPassword("password123");
 
         com.epam_final_project.dto.trainer.response.TrainerProfileDto trainerProfileDto = new com.epam_final_project.dto.trainer.response.TrainerProfileDto();
         trainerProfileDto.setFirstName("Michael");
@@ -206,11 +207,12 @@ public class TrainerServiceImplTest {
         trainerProfileDto.setSpecialization("Yoga");
         trainerProfileDto.setActive(true);
 
+        when(authService.checkTrainerUsernameAndPassword(trainer.getUsername(), trainer.getPassword())).thenReturn(true);
         when(trainerDao.findByUsername(trainer.getUsername())).thenReturn(Optional.of(trainer));
         when(trainerMapper.toTrainerProfileDto(trainer)).thenReturn(trainerProfileDto);
 
         // Act
-        Optional<com.epam_final_project.dto.trainer.response.TrainerProfileDto> foundTrainer = trainerServiceImpl.selectTrainerByUsername(trainer.getUsername());
+        Optional<com.epam_final_project.dto.trainer.response.TrainerProfileDto> foundTrainer = trainerServiceImpl.selectTrainerByUsername(trainer.getUsername(), trainer.getUsername(), trainer.getPassword());
 
         // Assert
         assertFalse(foundTrainer.isEmpty());
@@ -360,14 +362,17 @@ public class TrainerServiceImplTest {
     }
 
     @Test
-    public void getTrainingsByUsernameAndCriteria_shouldCallDaoMethod() {
+    public void getTrainingsByUsernameAndCriteria_shouldCallDaoMethod() throws AuthenticationException {
         // Arrange
         String trainerUsername = "john.smith";
         LocalDate fromDate = LocalDate.of(2026, 1, 1);
         LocalDate toDate = LocalDate.of(2026, 12, 31);
         String traineeName = "trainee";
+        String authUsername = "john.smith";
+        String authPassword = "password123";
 
         List<Training> expectedTrainings = new ArrayList<>();
+        when(authService.checkTrainerUsernameAndPassword(authUsername, authPassword)).thenReturn(true);
         when(trainerDao.findTrainingsByUsernameAndCriteria(
                 trainerUsername,
                 fromDate,
@@ -380,7 +385,9 @@ public class TrainerServiceImplTest {
                 trainerUsername,
                 fromDate,
                 toDate,
-                traineeName);
+                traineeName,
+                authUsername,
+                authPassword);
 
         // Assert
         assertEquals(expectedTrainings.size(), result.size());
@@ -392,9 +399,11 @@ public class TrainerServiceImplTest {
     }
 
     @Test
-    public void getTrainersNotAssignedOnTraineeByTraineeUsername_shouldCallDaoMethod() {
+    public void getTrainersNotAssignedOnTraineeByTraineeUsername_shouldCallDaoMethod() throws AuthenticationException {
         // Arrange
         String username = "john.smith";
+        String authUsername = "john.smith";
+        String authPassword = "password123";
         List<Trainer> expectedTrainers = new ArrayList<>();
         expectedTrainers.add(new Trainer());
 
@@ -402,12 +411,13 @@ public class TrainerServiceImplTest {
         trainerSummaryDto.setFirstName("Trainer");
         trainerSummaryDto.setLastName("One");
 
+        when(authService.checkTraineeUsernameAndPassword(authUsername, authPassword)).thenReturn(true);
         when(trainerDao.findTrainersNotAssignedOnTraineeByTraineeUsername(username))
                 .thenReturn(expectedTrainers);
         when(trainerMapper.toDto(any(Trainer.class))).thenReturn(trainerSummaryDto);
 
         // Act
-        List<TrainerSummaryDto> result = trainerServiceImpl.getTrainersNotAssignedOnTraineeByTraineeUsername(username);
+        List<TrainerSummaryDto> result = trainerServiceImpl.getTrainersNotAssignedOnTraineeByTraineeUsername(username, authUsername, authPassword);
 
         // Assert
         assertEquals(expectedTrainers.size(), result.size());
