@@ -80,14 +80,13 @@ public class TraineeDaoImpl implements TraineeDao {
 
     @Override
     public void deleteByUsername(String username) {
-        String jpql = "DELETE FROM Trainee t WHERE t.username = :username";
-        int deleted = em.createQuery(jpql)
-                .setParameter("username", username)
-                .executeUpdate();
-
-        if (deleted == 0) {
+        Optional<Trainee> traineeOpt = findByUsername(username);
+        if (traineeOpt.isEmpty()) {
             log.warn("No trainee found with username: {}", username);
+            throw new EntityNotFoundException("Trainee not found with username: " + username);
         }
+        em.remove(traineeOpt.get());
+        log.info("Deleted trainee with username: {}", username);
     }
 
     @Override

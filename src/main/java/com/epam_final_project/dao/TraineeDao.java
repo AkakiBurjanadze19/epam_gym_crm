@@ -2,6 +2,7 @@ package com.epam_final_project.dao;
 
 import com.epam_final_project.domain.Trainee;
 import com.epam_final_project.domain.Training;
+import jakarta.persistence.EntityNotFoundException;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -14,7 +15,7 @@ public interface TraineeDao {
     Optional<Trainee> findById(Integer traineeId);
     List<Trainee> findAll();
     Optional<Trainee> findByUsername(String username);
-    void deleteByUsername(String username);
+    void deleteByUsername(String username) throws EntityNotFoundException;
     List<Training> findTrainingsByUsernameAndCriteria(
             String username,
             LocalDate fromDate,

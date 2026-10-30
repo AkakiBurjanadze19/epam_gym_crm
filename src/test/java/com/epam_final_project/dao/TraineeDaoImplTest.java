@@ -5,6 +5,7 @@ import com.epam_final_project.domain.Trainee;
 import com.epam_final_project.domain.Trainer;
 import com.epam_final_project.domain.Training;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -204,6 +205,47 @@ public class TraineeDaoImplTest {
 
         // Assert
         assertTrue(foundTrainee.isEmpty());
+    }
+
+    @Test
+    public void deleteByUsername_shouldThrowExceptionWhenTraineeNotFound() {
+        // Arrange
+        String nonExistentUsername = "nonexistent.user";
+
+        // Act & Assert
+        assertThrows(EntityNotFoundException.class, () -> {
+            traineeDao.deleteByUsername(nonExistentUsername);
+        });
+    }
+
+    @Test
+    public void deleteByUsername_shouldCascadeDeleteTrainings() {
+        // Arrange
+        Trainee trainee = getTrainee();
+        Trainer trainer = getTrainer();
+        Training training = getTraining();
+
+        // Set up the training-trainee relationship (cascade is on Trainee side)
+        trainee.addTraining(training);
+        training.setTrainee(trainee);
+        training.setTrainer(trainer);
+
+        // Verify training exists before delete
+        List<Training> trainingsBefore = traineeDao.findTrainingsByUsernameAndCriteria(
+                trainee.getUsername(), null, null, null, null);
+        assertEquals(1, trainingsBefore.size());
+
+        // Act
+        traineeDao.deleteByUsername(trainee.getUsername());
+
+        // Assert - trainee should be deleted
+        Optional<Trainee> foundTrainee = traineeDao.findByUsername(trainee.getUsername());
+        assertTrue(foundTrainee.isEmpty());
+
+        // Assert - training should be cascade deleted
+        List<Training> trainingsAfter = traineeDao.findTrainingsByUsernameAndCriteria(
+                trainee.getUsername(), null, null, null, null);
+        assertEquals(0, trainingsAfter.size());
     }
 
     @Test
