@@ -6,10 +6,10 @@ import com.epam_final_project.dto.trainee.response.TraineeProfileDto;
 import com.epam_final_project.dto.trainee.response.UpdateTraineeProfileResponseDto;
 import com.epam_final_project.dto.trainee.response.TraineeRegistrationResponseDto;
 import com.epam_final_project.dto.trainer.response.TrainerSummaryDto;
-import com.epam_final_project.dto.training.response.TraineeTrainingResponseDto;
 import com.epam_final_project.dto.common.ActivateProfileRequestDto;
 import com.epam_final_project.service.AuthService;
 import com.epam_final_project.service.TraineeService;
+import com.epam_final_project.service.TrainerService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -26,7 +26,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.naming.AuthenticationException;
 import jakarta.persistence.EntityNotFoundException;
-import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -34,11 +33,13 @@ import java.util.List;
 @Tag(name = "Trainee", description = "Trainee management APIs")
 public class TraineeController {
     private final TraineeService traineeService;
+    private final TrainerService trainerService;
     private final AuthService authService;
 
     @Autowired
-    public TraineeController(TraineeService traineeService, AuthService authService) {
+    public TraineeController(TraineeService traineeService, TrainerService trainerService, AuthService authService) {
         this.traineeService = traineeService;
+        this.trainerService = trainerService;
         this.authService = authService;
     }
 
@@ -210,46 +211,29 @@ public class TraineeController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @GetMapping("/{username}/trainings")
-    @Operation(summary = "Get trainee trainings with filters",
-            description = "Retrieves all trainings for a trainee with optional filtering by date range, trainer name, and training type. Requires authentication.")
+    @GetMapping("/{username}/unassigned-trainers")
+    @Operation(summary = "Get active trainers not assigned to trainee",
+            description = "Retrieves a list of active trainers who are not currently assigned to the specified trainee. Requires authentication.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Trainings retrieved successfully",
-                    content = @Content(schema = @Schema(implementation = TraineeTrainingResponseDto.class))),
+            @ApiResponse(responseCode = "200", description = "Trainers retrieved successfully",
+                    content = @Content(schema = @Schema(implementation = TrainerSummaryDto.class))),
             @ApiResponse(responseCode = "401", description = "Invalid credentials",
                     content = @Content(schema = @Schema(implementation = Void.class))),
             @ApiResponse(responseCode = "404", description = "Trainee not found",
                     content = @Content(schema = @Schema(implementation = Void.class)))
     })
-    public ResponseEntity<List<TraineeTrainingResponseDto>> getTraineeTrainings(
+    public ResponseEntity<List<TrainerSummaryDto>> getUnassignedTrainers(
             @Parameter(description = "Trainee username", example = "john.smith")
             @PathVariable("username") String username,
             @Parameter(description = "Authenticated username", example = "john.smith")
             @RequestParam("username") @NotBlank String authUsername,
             @Parameter(description = "Authenticated password", example = "secret123")
-            @RequestParam("password") @NotBlank String authPassword,
-            @Parameter(description = "Filter trainings from this date (inclusive)", example = "2024-01-01")
-            @RequestParam(value = "period_from", required = false) LocalDate periodFrom,
-            @Parameter(description = "Filter trainings to this date (inclusive)", example = "2024-12-31")
-            @RequestParam(value = "period_to", required = false) LocalDate periodTo,
-            @Parameter(description = "Filter by trainer name (partial match)", example = "jane")
-            @RequestParam(value = "trainer_name", required = false) String trainerName,
-            @Parameter(description = "Filter by training type name", example = "Strength Training")
-            @RequestParam(value = "training_type", required = false) String trainingType
+            @RequestParam("password") @NotBlank String authPassword
     ) throws AuthenticationException {
         if (traineeService.selectTraineeByUsername(username, authUsername, authPassword).isEmpty()) {
             throw new EntityNotFoundException("Trainee not found: " + username);
         }
-        List<TraineeTrainingResponseDto> response = traineeService.getTrainingsByUsernameAndCriteria(
-                username,
-                periodFrom,
-                periodTo,
-                trainerName,
-                trainingType,
-                authUsername,
-                authPassword
-        );
-
+        List<TrainerSummaryDto> response = trainerService.getTrainersNotAssignedOnTraineeByTraineeUsername(username, authUsername, authPassword);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

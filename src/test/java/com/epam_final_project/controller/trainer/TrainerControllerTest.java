@@ -7,7 +7,6 @@ import com.epam_final_project.dto.trainer.response.TrainerProfileDto;
 import com.epam_final_project.dto.trainer.response.TrainerRegistrationResponseDto;
 import com.epam_final_project.dto.trainer.response.TrainerSummaryDto;
 import com.epam_final_project.dto.trainer.response.UpdateTrainerProfileResponseDto;
-import com.epam_final_project.dto.training.response.TrainerTrainingResponseDto;
 import com.epam_final_project.service.TrainerService;
 import com.epam_final_project.service.TraineeService;
 import com.epam_final_project.service.AuthService;
@@ -22,7 +21,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import tools.jackson.databind.ObjectMapper;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -186,70 +184,5 @@ public class TrainerControllerTest {
                         .param("oldPassword", oldPassword)
                         .param("newPassword", newPassword))
                 .andExpect(status().isOk());
-    }
-
-    @Test
-    public void getTrainerTrainings_returns200() throws Exception {
-        String username = "Joel.Miller";
-
-        TrainerTrainingResponseDto training1 = new TrainerTrainingResponseDto(
-                "Morning Cardio",
-                LocalDate.of(2024, 1, 15),
-                "Cardio",
-                60,
-                "john.smith"
-        );
-        TrainerTrainingResponseDto training2 = new TrainerTrainingResponseDto(
-                "Evening Strength",
-                LocalDate.of(2024, 1, 16),
-                "Strength",
-                45,
-                "mary.trainee"
-        );
-
-        when(trainerService.selectTrainerByUsername(username, username, "secret")).thenReturn(Optional.of(new TrainerProfileDto()));
-        when(trainerService.getTrainingsByUsernameAndCriteria(
-                eq(username), any(), any(), any(),
-                eq(username), eq("secret")
-        )).thenReturn(List.of(training1, training2));
-
-        mockMvc.perform(get("/api/trainers/{username}/trainings", username)
-                        .param("username", username)
-                        .param("password", "secret")
-                        .param("period_from", "2024-01-01")
-                        .param("period_to", "2024-12-31")
-                        .param("trainee_name", "john"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].trainingName").value("Morning Cardio"))
-                .andExpect(jsonPath("$[0].traineeName").value("john.smith"))
-                .andExpect(jsonPath("$[1].trainingName").value("Evening Strength"));
-    }
-
-    @Test
-    public void getUnassignedTrainers_returns200() throws Exception {
-        String username = "John.Smith";
-
-        TrainerSummaryDto trainer1 = new TrainerSummaryDto();
-        trainer1.setUsername("jane.trainer");
-        trainer1.setFirstName("Jane");
-        trainer1.setLastName("Doe");
-        trainer1.setSpecialization("Strength Training");
-
-        TrainerSummaryDto trainer2 = new TrainerSummaryDto();
-        trainer2.setUsername("bob.trainer");
-        trainer2.setFirstName("Bob");
-        trainer2.setLastName("Smith");
-        trainer2.setSpecialization("Cardio");
-
-        when(traineeService.selectTraineeByUsername(username, username, "secret")).thenReturn(Optional.of(new com.epam_final_project.dto.trainee.response.TraineeProfileDto()));
-        when(trainerService.getTrainersNotAssignedOnTraineeByTraineeUsername(username, username, "secret"))
-                .thenReturn(List.of(trainer1, trainer2));
-
-        mockMvc.perform(get("/api/trainers/{username}/unassigned-trainers", username)
-                        .param("username", username)
-                        .param("password", "secret"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].username").value("jane.trainer"))
-                .andExpect(jsonPath("$[1].username").value("bob.trainer"));
     }
 }

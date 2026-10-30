@@ -6,8 +6,8 @@ import com.epam_final_project.dto.trainee.response.TraineeProfileDto;
 import com.epam_final_project.dto.trainee.response.UpdateTraineeProfileResponseDto;
 import com.epam_final_project.dto.trainee.response.TraineeRegistrationResponseDto;
 import com.epam_final_project.dto.trainer.response.TrainerSummaryDto;
-import com.epam_final_project.dto.training.response.TraineeTrainingResponseDto;
 import com.epam_final_project.service.TraineeService;
+import com.epam_final_project.service.TrainerService;
 import com.epam_final_project.service.AuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,6 +36,9 @@ import java.util.Optional;
 public class TraineeControllerTest {
     @Mock
     private TraineeService traineeService;
+
+    @Mock
+    private TrainerService trainerService;
 
     @Mock
     private AuthService authService;
@@ -307,40 +310,30 @@ public class TraineeControllerTest {
     }
 
     @Test
-    public void getTraineeTrainings_returns200() throws Exception {
+    public void getUnassignedTrainers_returns200() throws Exception {
         String username = "John.Smith";
 
-        TraineeTrainingResponseDto training1 = new TraineeTrainingResponseDto(
-                "Morning Cardio",
-                LocalDate.of(2024, 1, 15),
-                "Cardio",
-                60,
-                "jane.trainer"
-        );
-        TraineeTrainingResponseDto training2 = new TraineeTrainingResponseDto(
-                "Evening Strength",
-                LocalDate.of(2024, 1, 16),
-                "Strength",
-                45,
-                "bob.trainer"
-        );
+        TrainerSummaryDto trainer1 = new TrainerSummaryDto();
+        trainer1.setUsername("jane.trainer");
+        trainer1.setFirstName("Jane");
+        trainer1.setLastName("Doe");
+        trainer1.setSpecialization("Strength Training");
+
+        TrainerSummaryDto trainer2 = new TrainerSummaryDto();
+        trainer2.setUsername("bob.trainer");
+        trainer2.setFirstName("Bob");
+        trainer2.setLastName("Smith");
+        trainer2.setSpecialization("Cardio");
 
         when(traineeService.selectTraineeByUsername(username, username, "secret")).thenReturn(Optional.of(new TraineeProfileDto()));
-        when(traineeService.getTrainingsByUsernameAndCriteria(
-                eq(username), any(), any(), any(), any(),
-                eq(username), eq("secret")
-        )).thenReturn(List.of(training1, training2));
+        when(trainerService.getTrainersNotAssignedOnTraineeByTraineeUsername(username, username, "secret"))
+                .thenReturn(List.of(trainer1, trainer2));
 
-        mockMvc.perform(get("/api/trainees/{username}/trainings", username)
+        mockMvc.perform(get("/api/trainees/{username}/unassigned-trainers", username)
                         .param("username", username)
-                        .param("password", "secret")
-                        .param("period_from", "2024-01-01")
-                        .param("period_to", "2024-12-31")
-                        .param("trainer_name", "jane")
-                        .param("training_type", "Cardio"))
+                        .param("password", "secret"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].trainingName").value("Morning Cardio"))
-                .andExpect(jsonPath("$[0].trainerName").value("jane.trainer"))
-                .andExpect(jsonPath("$[1].trainingName").value("Evening Strength"));
+                .andExpect(jsonPath("$[0].username").value("jane.trainer"))
+                .andExpect(jsonPath("$[1].username").value("bob.trainer"));
     }
 }
