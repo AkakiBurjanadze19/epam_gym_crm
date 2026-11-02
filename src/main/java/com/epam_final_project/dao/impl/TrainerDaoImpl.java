@@ -79,11 +79,8 @@ public class TrainerDaoImpl implements TrainerDao {
 
         Root<Training> training = query.from(Training.class);
 
-        training.fetch("trainer", JoinType.LEFT);
-        training.fetch("trainee", JoinType.LEFT);
-
-        Join<Training, Trainer> trainer = training.join("trainer");
-        Join<Training, Trainee> trainee = training.join("trainee");
+        Join<Training, Trainer> trainer = training.join("trainer", JoinType.LEFT);
+        Join<Training, Trainee> trainee = training.join("trainee", JoinType.LEFT);
 
         List<Predicate> predicates = new ArrayList<>();
 
