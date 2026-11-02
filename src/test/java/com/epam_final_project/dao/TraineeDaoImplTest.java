@@ -1,6 +1,9 @@
 package com.epam_final_project.dao;
 
-import com.epam_final_project.config.TestDataSourceConfig;
+import com.epam_final_project.dao.impl.TraineeDaoImpl;
+import com.epam_final_project.dao.impl.TrainerDaoImpl;
+import com.epam_final_project.dao.impl.TrainingDaoImpl;
+import com.epam_final_project.dao.impl.TrainingTypeDaoImpl;
 import com.epam_final_project.domain.Trainee;
 import com.epam_final_project.domain.Trainer;
 import com.epam_final_project.domain.Training;
@@ -9,12 +12,12 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.context.support.AnnotationConfigContextLoader;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.context.TestPropertySource;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -22,11 +25,10 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@ExtendWith(SpringExtension.class)
-@ContextConfiguration(
-        classes = {TestDataSourceConfig.class},
-        loader = AnnotationConfigContextLoader.class
-)
+@DataJpaTest
+@TestPropertySource(locations = "classpath:application.properties")
+@Sql(scripts = {"/schema.sql", "/data.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+@Import({TraineeDaoImpl.class, TrainerDaoImpl.class, TrainingDaoImpl.class, TrainingTypeDaoImpl.class})
 @Transactional
 public class TraineeDaoImplTest {
     @PersistenceContext

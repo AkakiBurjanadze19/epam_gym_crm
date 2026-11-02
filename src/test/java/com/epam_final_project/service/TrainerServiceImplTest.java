@@ -16,6 +16,7 @@ import com.epam_final_project.mapper.TrainingMapper;
 import com.epam_final_project.mapper.TraineeMapper;
 import com.epam_final_project.service.impl.TrainerServiceImpl;
 import com.epam_final_project.util.UsernameConflictChecker;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -39,6 +40,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyBoolean;
+import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.argThat;
 import static org.mockito.Mockito.doNothing;
 
@@ -58,11 +60,17 @@ public class TrainerServiceImplTest {
     private TrainingMapper trainingMapper;
     @Mock
     private TraineeMapper traineeMapper;
-    @Mock
+
     private UsernameConflictChecker usernameConflictChecker;
 
     @InjectMocks
     private TrainerServiceImpl trainerServiceImpl;
+
+    @BeforeEach
+    public void setUp() {
+        usernameConflictChecker = new UsernameConflictChecker(traineeDao, trainerDao);
+        trainerServiceImpl.setUsernameConflictChecker(usernameConflictChecker);
+    }
 
     @Test
     public void createTrainer_shouldCallDaoCreate() {
@@ -81,7 +89,7 @@ public class TrainerServiceImplTest {
 
         when(trainerMapper.toEntity(request)).thenReturn(trainer);
         when(trainingTypeDao.findByTrainingTypeName("Yoga")).thenReturn(Optional.of(trainingType));
-        doNothing().when(usernameConflictChecker).checkUsernameConflict(any(), any(), anyBoolean());
+        when(trainerDao.existsByUsername(anyString())).thenReturn(false);
 
         // Act
         trainerServiceImpl.createTrainer(request);
@@ -107,7 +115,7 @@ public class TrainerServiceImplTest {
 
         when(trainerMapper.toEntity(request)).thenReturn(trainer);
         when(trainingTypeDao.findByTrainingTypeName("Strength")).thenReturn(Optional.of(trainingType));
-        doNothing().when(usernameConflictChecker).checkUsernameConflict(any(), any(), anyBoolean());
+        when(trainerDao.existsByUsername(anyString())).thenReturn(false);
 
         // Act
         trainerServiceImpl.createTrainer(request);
@@ -228,7 +236,7 @@ public class TrainerServiceImplTest {
         request.setLastName("Smith");
         request.setSpecialization("Yoga");
 
-        doNothing().when(usernameConflictChecker).checkUsernameConflict(any(), any(), anyBoolean());
+        when(trainerDao.existsByUsername(anyString())).thenReturn(false);
 
         // Act & Assert
         assertThrows(IllegalArgumentException.class, () -> {
@@ -244,7 +252,7 @@ public class TrainerServiceImplTest {
         request.setLastName("Smith");
         request.setSpecialization("Yoga");
 
-        doNothing().when(usernameConflictChecker).checkUsernameConflict(any(), any(), anyBoolean());
+        when(trainerDao.existsByUsername(anyString())).thenReturn(false);
 
         // Act & Assert
         assertThrows(IllegalArgumentException.class, () -> {
@@ -260,7 +268,7 @@ public class TrainerServiceImplTest {
         request.setLastName(null);
         request.setSpecialization("Yoga");
 
-        doNothing().when(usernameConflictChecker).checkUsernameConflict(any(), any(), anyBoolean());
+        when(trainerDao.existsByUsername(anyString())).thenReturn(false);
 
         // Act & Assert
         assertThrows(IllegalArgumentException.class, () -> {
@@ -276,7 +284,7 @@ public class TrainerServiceImplTest {
         request.setLastName("");
         request.setSpecialization("Yoga");
 
-        doNothing().when(usernameConflictChecker).checkUsernameConflict(any(), any(), anyBoolean());
+        when(trainerDao.existsByUsername(anyString())).thenReturn(false);
 
         // Act & Assert
         assertThrows(IllegalArgumentException.class, () -> {
