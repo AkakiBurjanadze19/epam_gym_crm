@@ -1,3 +1,4 @@
+DELETE FROM training_types;
 INSERT INTO training_types (id, training_type_name) VALUES (1, 'Functional Training');
 INSERT INTO training_types (id, training_type_name) VALUES (2, 'Mobility Training');
 INSERT INTO training_types (id, training_type_name) VALUES (3, 'Strength Training');
