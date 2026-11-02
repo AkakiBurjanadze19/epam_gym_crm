@@ -14,7 +14,23 @@ public interface TrainingMapper {
     @Mapping(target = "trainerUsername", source = "trainer.username")
     @Mapping(target = "type", source = "type.trainingTypeName")
     TrainingDto toDto(Training training);
+
+    @Mapping(target = "trainingName", source = "name")
+    @Mapping(target = "trainingDate", source = "date")
+    @Mapping(target = "trainingDuration", source = "duration")
+    @Mapping(target = "trainingType", source = "type.trainingTypeName")
+    @Mapping(target = "trainerName", expression = "java(training.getTrainer().getFirstName() + \" \" + training.getTrainer().getLastName())")
     TraineeTrainingResponseDto toTraineeTrainingResponseDto(Training training);
+
+    @Mapping(target = "trainingName", source = "name")
+    @Mapping(target = "trainingDate", source = "date")
+    @Mapping(target = "trainingDuration", source = "duration")
+    @Mapping(target = "trainingType", source = "type.trainingTypeName")
+    @Mapping(target = "traineeName", expression = "java(training.getTrainee().getFirstName() + \" \" + training.getTrainee().getLastName())")
     TrainerTrainingResponseDto toTrainerTrainingResponseDto(Training training);
+
+    @Mapping(target = "name", source = "trainingName")
+    @Mapping(target = "date", source = "trainingDate")
+    @Mapping(target = "duration", source = "trainingDuration")
     Training toEntity(CreateTrainingRequestDto request);
 }
