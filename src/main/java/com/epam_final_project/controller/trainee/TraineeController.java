@@ -10,6 +10,7 @@ import com.epam_final_project.dto.common.ActivateProfileRequestDto;
 import com.epam_final_project.service.AuthService;
 import com.epam_final_project.service.TraineeService;
 import com.epam_final_project.service.TrainerService;
+import io.micrometer.core.annotation.Timed;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -44,6 +45,7 @@ public class TraineeController {
     }
 
     @PostMapping
+    @Timed(value = "gym.api.request.latency", description = "Trainee registration latency", percentiles = {0.5, 0.95, 0.99})
     @Operation(summary = "Register a new trainee",
             description = "Creates a new trainee profile. Username and password are auto-generated. First name and last name are required; date of birth and address are optional.")
     @ApiResponses(value = {
@@ -62,6 +64,7 @@ public class TraineeController {
     }
 
     @GetMapping("/{username}")
+    @Timed(value = "gym.api.request.latency", description = "Get trainee profile latency", percentiles = {0.5, 0.95, 0.99})
     @Operation(summary = "Get trainee profile by username",
             description = "Retrieves the full trainee profile including associated trainers list. Requires authentication.")
     @ApiResponses(value = {
@@ -86,6 +89,7 @@ public class TraineeController {
     }
 
     @PutMapping("/{username}")
+    @Timed(value = "gym.api.request.latency", description = "Update trainee profile latency", percentiles = {0.5, 0.95, 0.99})
     @Operation(summary = "Update trainee profile",
             description = "Updates trainee profile. Requires authentication via username and password. First name, last name, and isActive are required; date of birth and address are optional.")
     @ApiResponses(value = {
@@ -111,6 +115,7 @@ public class TraineeController {
     }
 
     @DeleteMapping("/{username}")
+    @Timed(value = "gym.api.request.latency", description = "Delete trainee profile latency", percentiles = {0.5, 0.95, 0.99})
     @Operation(summary = "Delete trainee profile",
             description = "Permanently deletes a trainee profile and all associated trainings (cascade delete). Requires authentication via username and password.")
     @ApiResponses(value = {
@@ -133,6 +138,7 @@ public class TraineeController {
     }
 
     @PutMapping("/{traineeUsername}/trainers")
+    @Timed(value = "gym.api.request.latency", description = "Update trainee trainer list latency", percentiles = {0.5, 0.95, 0.99})
     @Operation(summary = "Update trainee's trainer list",
             description = "Replaces the entire list of trainers assigned to a trainee. Requires authentication. Provide a list of trainer usernames.")
     @ApiResponses(value = {
@@ -165,6 +171,7 @@ public class TraineeController {
     }
 
     @PatchMapping("/{username}/status")
+    @Timed(value = "gym.api.request.latency", description = "Activate/deactivate trainee latency", percentiles = {0.5, 0.95, 0.99})
     @Operation(summary = "Activate or deactivate trainee",
             description = "Activates or deactivates a trainee profile. This is not an idempotent operation. Requires authentication.")
     @ApiResponses(value = {
@@ -190,6 +197,7 @@ public class TraineeController {
     }
 
     @PutMapping("/{username}/password")
+    @Timed(value = "gym.api.request.latency", description = "Change trainee password latency", percentiles = {0.5, 0.95, 0.99})
     @Operation(summary = "Change trainee password",
             description = "Changes the trainee's password. Requires current password for verification.")
     @ApiResponses(value = {
@@ -212,6 +220,7 @@ public class TraineeController {
     }
 
     @GetMapping("/{username}/unassigned-trainers")
+    @Timed(value = "gym.api.request.latency", description = "Get unassigned trainers latency", percentiles = {0.5, 0.95, 0.99})
     @Operation(summary = "Get active trainers not assigned to trainee",
             description = "Retrieves a list of active trainers who are not currently assigned to the specified trainee. Requires authentication.")
     @ApiResponses(value = {

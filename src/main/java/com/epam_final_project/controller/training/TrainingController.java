@@ -7,6 +7,7 @@ import com.epam_final_project.service.AuthService;
 import com.epam_final_project.service.TrainingService;
 import com.epam_final_project.service.TraineeService;
 import com.epam_final_project.service.TrainerService;
+import io.micrometer.core.annotation.Timed;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -44,6 +45,7 @@ public class TrainingController {
     }
 
     @PostMapping
+    @Timed(value = "gym.api.request.latency", description = "Create training latency", percentiles = {0.5, 0.95, 0.99})
     @Operation(summary = "Add a new training",
             description = "Creates a new training session linking a trainee and trainer. Training type is automatically set to the trainer's specialization. Training name, date, and duration are required. Duration must be a positive number. Requires authentication as either the trainee or the trainer.")
     @ApiResponses(value = {
@@ -67,6 +69,7 @@ public class TrainingController {
     }
 
     @GetMapping("/trainee/{username}")
+    @Timed(value = "gym.api.request.latency", description = "Get trainee trainings latency", percentiles = {0.5, 0.95, 0.99})
     @Operation(summary = "Get trainee trainings with filters",
             description = "Retrieves all trainings for a trainee with optional filtering by date range, trainer name, and training type. Requires authentication.")
     @ApiResponses(value = {
@@ -110,6 +113,7 @@ public class TrainingController {
     }
 
     @GetMapping("/trainer/{username}")
+    @Timed(value = "gym.api.request.latency", description = "Get trainer trainings latency", percentiles = {0.5, 0.95, 0.99})
     @Operation(summary = "Get trainer trainings with filters",
             description = "Retrieves all trainings for a trainer with optional filtering by date range and trainee name. Requires authentication.")
     @ApiResponses(value = {

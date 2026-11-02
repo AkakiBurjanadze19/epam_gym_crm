@@ -2,6 +2,7 @@ package com.epam_final_project.controller.auth;
 
 import com.epam_final_project.dto.auth.request.ChangeLoginRequestDto;
 import com.epam_final_project.service.AuthService;
+import io.micrometer.core.annotation.Timed;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -30,6 +31,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
+    @Timed(value = "gym.api.request.latency", description = "Login latency", percentiles = {0.5, 0.95, 0.99})
     @Operation(summary = "Login with username and password",
             description = "Authenticates a trainee or trainer using username and password. Returns 200 OK on success, 401 Unauthorized on failure.")
     @ApiResponses(value = {
@@ -53,6 +55,7 @@ public class AuthController {
     }
 
     @PutMapping("/password")
+    @Timed(value = "gym.api.request.latency", description = "Change password latency", percentiles = {0.5, 0.95, 0.99})
     @Operation(summary = "Change password",
             description = "Changes the password for a trainee or trainer. Requires current password for verification.")
     @ApiResponses(value = {

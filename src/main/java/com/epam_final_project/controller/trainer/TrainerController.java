@@ -10,6 +10,7 @@ import com.epam_final_project.dto.trainer.response.UpdateTrainerProfileResponseD
 import com.epam_final_project.service.AuthService;
 import com.epam_final_project.service.TraineeService;
 import com.epam_final_project.service.TrainerService;
+import io.micrometer.core.annotation.Timed;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -44,6 +45,7 @@ public class TrainerController {
     }
 
     @PostMapping
+    @Timed(value = "gym.api.request.latency", description = "Trainer registration latency", percentiles = {0.5, 0.95, 0.99})
     @Operation(summary = "Register a new trainer",
             description = "Creates a new trainer profile. Username and password are auto-generated. First name, last name, and specialization are required.")
     @ApiResponses(value = {
@@ -62,6 +64,7 @@ public class TrainerController {
     }
 
     @GetMapping("/{username}")
+    @Timed(value = "gym.api.request.latency", description = "Get trainer profile latency", percentiles = {0.5, 0.95, 0.99})
     @Operation(summary = "Get trainer profile by username",
             description = "Retrieves the full trainer profile including associated trainees list. Requires authentication.")
     @ApiResponses(value = {
@@ -86,6 +89,7 @@ public class TrainerController {
     }
 
     @PutMapping("/{username}")
+    @Timed(value = "gym.api.request.latency", description = "Update trainer profile latency", percentiles = {0.5, 0.95, 0.99})
     @Operation(summary = "Update trainer profile",
             description = "Updates trainer profile. Requires authentication via username and password. First name, last name, and isActive are required; specialization is read-only and cannot be changed.")
     @ApiResponses(value = {
@@ -115,6 +119,7 @@ public class TrainerController {
     }
 
     @PatchMapping("/{username}/status")
+    @Timed(value = "gym.api.request.latency", description = "Activate/deactivate trainer latency", percentiles = {0.5, 0.95, 0.99})
     @Operation(summary = "Activate or deactivate trainer",
             description = "Activates or deactivates a trainer profile. This is not an idempotent operation. Requires authentication.")
     @ApiResponses(value = {
@@ -140,6 +145,7 @@ public class TrainerController {
     }
 
     @PutMapping("/{username}/password")
+    @Timed(value = "gym.api.request.latency", description = "Change trainer password latency", percentiles = {0.5, 0.95, 0.99})
     @Operation(summary = "Change trainer password",
             description = "Changes the trainer's password. Requires current password for verification.")
     @ApiResponses(value = {
