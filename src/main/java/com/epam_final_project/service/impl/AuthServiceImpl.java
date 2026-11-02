@@ -1,5 +1,6 @@
 package com.epam_final_project.service.impl;
 
+import com.epam_final_project.metrics.BusinessMetrics;
 import com.epam_final_project.dao.TraineeDao;
 import com.epam_final_project.dao.TrainerDao;
 import com.epam_final_project.domain.Trainee;
@@ -14,10 +15,12 @@ import java.util.Optional;
 public class AuthServiceImpl implements AuthService {
     private final TraineeDao traineeDao;
     private final TrainerDao trainerDao;
+    private final BusinessMetrics businessMetrics;
 
-    public AuthServiceImpl(TraineeDao traineeDao, TrainerDao trainerDao) {
+    public AuthServiceImpl(TraineeDao traineeDao, TrainerDao trainerDao, BusinessMetrics businessMetrics) {
         this.traineeDao = traineeDao;
         this.trainerDao = trainerDao;
+        this.businessMetrics = businessMetrics;
     }
 
     @Override
@@ -26,10 +29,20 @@ public class AuthServiceImpl implements AuthService {
             throw new IllegalArgumentException("username and password must be provided");
         }
 
-        return traineeDao
+        boolean result = traineeDao
                 .findByUsername(username)
                 .map(trainee -> trainee.getPassword().equals(password))
                 .orElse(false);
+
+        if (businessMetrics != null) {
+            if (result) {
+                businessMetrics.incrementAuthSuccess();
+            } else {
+                businessMetrics.incrementAuthFailure();
+            }
+        }
+
+        return result;
     }
 
     @Override
@@ -38,10 +51,20 @@ public class AuthServiceImpl implements AuthService {
             throw new IllegalArgumentException("username and password must be provided");
         }
 
-        return trainerDao
+        boolean result = trainerDao
                 .findByUsername(username)
                 .map(trainer -> trainer.getPassword().equals(password))
                 .orElse(false);
+
+        if (businessMetrics != null) {
+            if (result) {
+                businessMetrics.incrementAuthSuccess();
+            } else {
+                businessMetrics.incrementAuthFailure();
+            }
+        }
+
+        return result;
     }
 
     @Override

@@ -1,5 +1,6 @@
 package com.epam_final_project.service.impl;
 
+import com.epam_final_project.metrics.BusinessMetrics;
 import com.epam_final_project.dao.TraineeDao;
 import com.epam_final_project.dao.TrainerDao;
 import com.epam_final_project.dao.TrainingTypeDao;
@@ -43,6 +44,7 @@ public class TrainerServiceImpl implements TrainerService {
     private TrainingMapper trainingMapper;
     private TraineeMapper traineeMapper;
     private UsernameConflictChecker usernameConflictChecker;
+    private BusinessMetrics businessMetrics;
 
     @Autowired
     public void setTrainerDao(TrainerDao trainerDao) {
@@ -84,6 +86,11 @@ public class TrainerServiceImpl implements TrainerService {
         this.usernameConflictChecker = usernameConflictChecker;
     }
 
+    @Autowired
+    public void setBusinessMetrics(BusinessMetrics businessMetrics) {
+        this.businessMetrics = businessMetrics;
+    }
+
     @Override
     @Transactional
     public TrainerRegistrationResponseDto createTrainer(CreateTrainerRequest request) {
@@ -101,6 +108,10 @@ public class TrainerServiceImpl implements TrainerService {
         generateUsernameAndPassword(trainer);
 
         trainerDao.create(trainer);
+
+        if (businessMetrics != null) {
+            businessMetrics.incrementTrainerRegistrations();
+        }
 
         return new TrainerRegistrationResponseDto(trainer.getUsername(), trainer.getPassword());
     }

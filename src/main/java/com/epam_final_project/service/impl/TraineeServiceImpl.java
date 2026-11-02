@@ -1,5 +1,6 @@
 package com.epam_final_project.service.impl;
 
+import com.epam_final_project.metrics.BusinessMetrics;
 import com.epam_final_project.dao.TraineeDao;
 import com.epam_final_project.dao.TrainerDao;
 import com.epam_final_project.domain.Trainee;
@@ -41,6 +42,7 @@ public class TraineeServiceImpl implements TraineeService {
     private TrainingMapper trainingMapper;
     private UsernameConflictChecker usernameConflictChecker;
     private EntityManager em;
+    private BusinessMetrics businessMetrics;
 
     @Autowired
     public void setTraineeDao(TraineeDao traineeDao) {
@@ -78,6 +80,11 @@ public class TraineeServiceImpl implements TraineeService {
     }
 
     @Autowired
+    public void setBusinessMetrics(BusinessMetrics businessMetrics) {
+        this.businessMetrics = businessMetrics;
+    }
+
+    @Autowired
     public void setEntityManager(EntityManager em) {
         this.em = em;
     }
@@ -96,6 +103,10 @@ public class TraineeServiceImpl implements TraineeService {
         generateUsernameAndPassword(trainee);
 
         traineeDao.create(trainee);
+
+        if (businessMetrics != null) {
+            businessMetrics.incrementTraineeRegistrations();
+        }
 
         return new TraineeRegistrationResponseDto(trainee.getUsername(), trainee.getPassword());
     }

@@ -1,5 +1,6 @@
 package com.epam_final_project.service.impl;
 
+import com.epam_final_project.metrics.BusinessMetrics;
 import com.epam_final_project.dao.TraineeDao;
 import com.epam_final_project.dao.TrainerDao;
 import com.epam_final_project.dao.TrainingDao;
@@ -29,6 +30,7 @@ public class TrainingServiceImpl implements TrainingService {
     private TrainerDao trainerDao;
     private TrainingMapper trainingMapper;
     private AuthService authService;
+    private BusinessMetrics businessMetrics;
 
     @Autowired
     public void setTrainingDao(TrainingDao trainingDao) {
@@ -53,6 +55,11 @@ public class TrainingServiceImpl implements TrainingService {
     @Autowired
     public void setAuthService(AuthService authService) {
         this.authService = authService;
+    }
+
+    @Autowired
+    public void setBusinessMetrics(BusinessMetrics businessMetrics) {
+        this.businessMetrics = businessMetrics;
     }
 
     @Override
@@ -83,6 +90,10 @@ public class TrainingServiceImpl implements TrainingService {
         validateTraining(training);
 
         trainingDao.create(training);
+
+        if (businessMetrics != null) {
+            businessMetrics.incrementTrainingCreations();
+        }
     }
 
     private Trainee getTrainee(CreateTrainingRequestDto request) {
