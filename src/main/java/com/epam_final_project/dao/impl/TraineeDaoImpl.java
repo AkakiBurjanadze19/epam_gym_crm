@@ -194,8 +194,13 @@ public class TraineeDaoImpl implements TraineeDao {
             throw new EntityNotFoundException("One or more trainers were not found");
         }
 
-        trainee.getTrainers().clear();
-        trainee.getTrainers().addAll(trainers);
+        for (Trainer currentTrainer : new ArrayList<>(trainee.getTrainers())) {
+            currentTrainer.removeTrainee(trainee);
+        }
+
+        for (Trainer trainer : trainers) {
+            trainer.addTrainee(trainee);
+        }
     }
 
     @Override
